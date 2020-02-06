@@ -4,6 +4,7 @@ const url = require('url')
 const querystring = require('querystring')
 const request = require('request')
 const functions = require('./lib/functions.js')
+const PORT = process.env.PORT || 5000
 
 
 const server = http.createServer((req, res)=>{
@@ -50,6 +51,6 @@ const server = http.createServer((req, res)=>{
     }
 })
 
-server.listen(3000, ()=>{
-    console.log('Server listening at port 3000!')
+server.listen(PORT, ()=>{
+    console.log(`Server listening at port ${PORT}!`)
 })
