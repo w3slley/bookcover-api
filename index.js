@@ -50,7 +50,7 @@ const server = http.createServer((req, res)=>{
             }
         default:
             res.end(JSON.stringify({status: 'failed', error: 'Method not suported yet.'}))
-            break
+            
     }
 })
 
