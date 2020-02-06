@@ -12,5 +12,5 @@
   "dependencies": {
     "request": "*",
     "querystring": "*"
-  },
+  }
 }
