@@ -24,7 +24,7 @@ Response:
 ```
 {
 "status":"success",
-"delay":"5.08 seconds",
+"delay":"0.834 seconds",
 "method":"getBookCover",
 "bookCoverUrl":"https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1388620656l/55030.jpg"
 }
