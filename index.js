@@ -15,8 +15,10 @@ const server = http.createServer((req, res)=>{
 
     let urlString = url.parse(req.url)
     switch(urlString.pathname){
+
         case '/getBookCover':
-            console.log(querystring.parse(urlString.query))
+            console.log(querystring.parse(urlString.query), urlString.pathname)
+
             if(querystring.parse(urlString.query)['bookTitle'] || querystring.parse(urlString.query)['authorName']){
                 let bookTitle = querystring.parse(urlString.query)['bookTitle'] || ''
                 let authorName = querystring.parse(urlString.query)['authorName'] || ''
@@ -48,7 +50,8 @@ const server = http.createServer((req, res)=>{
             else{//if no query is inserted
                 res.end(JSON.stringify({status: 'failed', error: 'Please insert options for search.'}))
             }
-        default:
+            break
+        default: 
             res.end(JSON.stringify({status: 'failed', error: 'Method not suported yet.'}))
             
     }
