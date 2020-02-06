@@ -48,6 +48,9 @@ const server = http.createServer((req, res)=>{
             else{//if no query is inserted
                 res.end(JSON.stringify({status: 'failed', error: 'Please insert options for search.'}))
             }
+        default:
+            res.end(JSON.stringify({status: 'failed', error: 'Method not suported yet.'}))
+            break
     }
 })
 
