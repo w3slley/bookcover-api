@@ -1,6 +1,6 @@
 # An API to retrieve bookcovers from the internet.
 
-Since I found really hard to find comprehensive APIs (tried both Goodreads' and Google's) to find and retrieve book cover images for a personal project, I decided to create this API (using Node.JS) that does exactly that. Right now it gets a .jpg image from Goodreads server by doing searches on the web. I plan to add more features on it over time.
+Since I found really hard to find comprehensive APIs (tried both Goodreads' and Google's) to find and retrieve book cover images for a personal project, I decided to create this API which does exactly that. I plan to add more features on it over time.
 
 Hope this is helpful for anyone wanting to create web apps that involves dealing with book covers in one way or another.
 
