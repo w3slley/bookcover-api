@@ -17,7 +17,7 @@ It accepts two paramaters:
 
 Example of a http request:
 
-`http://bookcoverapi.herokuapp.com/getBookCover?bookTitle=Cosmos&authorName=Carl+Sagan`
+`http://bookcoverapi.herokuapp.com/getBookCover?bookTitle=The+Pale+Blue+Dot&authorName=Carl+Sagan`
 
 Response:
 
@@ -26,6 +26,6 @@ Response:
 "status":"success",
 "delay":"0.834 seconds",
 "method":"getBookCover",
-"bookCoverUrl":"https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1388620656l/55030.jpg"
+"bookCoverUrl":"https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1500191671l/61663._SY475_.jpg"
 }
 ```
