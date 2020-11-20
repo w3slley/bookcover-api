@@ -28,7 +28,6 @@ const server = http.createServer((req, res)=>{
                     request(goodreadsLink, (err, response, body)=>{
                         if(err)
                             res.end(JSON.stringify({error: err}))
-                        
                         let bookCoverLink = functions.getLinkGoodreads(body)
                         //instantiating new date object to get time finished
                         let d2 = new Date()
@@ -36,15 +35,15 @@ const server = http.createServer((req, res)=>{
                         let diff =  timeEnd-timeInit
                         //sending json response
                         res.end(JSON.stringify({status: 'success', delay:`${diff/1000} seconds` ,method: 'getBookCover', bookCoverUrl: bookCoverLink}))
-                    })                  
-                })        
+                    })
+                })
             }
             else//if no query is inserted
                 res.end(JSON.stringify({status: 'failed', error: 'Please insert options for search.'}))
-            
+
             break
-        default: 
-            res.end(JSON.stringify({status: 'failed', error: 'Method not suported yet.'}))   
+        default:
+            res.end(JSON.stringify({status: 'failed', error: 'Method not suported yet.'}))
     }
 })
 
