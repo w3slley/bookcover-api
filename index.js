@@ -34,7 +34,7 @@ const server = http.createServer((req, res)=>{
                         let timeEnd = d2.getTime()
                         let diff =  timeEnd-timeInit
                         //sending json response
-                        res.end(JSON.stringify({status: 'success', delay:`${diff/1000} seconds` ,method: 'getBookCover', bookCoverUrl: bookCoverLink}))
+                        res.end(JSON.stringify({status: 'success', bookTitle: bookTitle, authorName: authorName, delay:`${diff/1000} seconds` ,method: 'getBookCover', bookCoverUrl: bookCoverLink}))
                     })
                 })
             }
