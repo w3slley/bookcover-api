@@ -15,7 +15,7 @@ It accepts two paramaters:
 - bookTitle
 - authorName
 
-Example of a http request:
+Example of an http request:
 
 `https://bookcoverapi.herokuapp.com/getBookCover?bookTitle=The+Pale+Blue+Dot&authorName=Carl+Sagan`
 
