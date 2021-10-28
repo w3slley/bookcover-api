@@ -23,11 +23,11 @@ Response:
 
 ```
 {
-"status":"success",
-"bookTitle":"The Pale Blue Dot",
-"authorName":"Carl Sagan",
-"delay":"0.834 seconds",
-"method":"getBookCover",
-"bookCoverUrl":"https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1500191671l/61663._SY475_.jpg"
+  "status":"success",
+  "bookTitle":"The Pale Blue Dot",
+  "authorName":"Carl Sagan",
+  "delay":"0.834 seconds",
+  "method":"getBookCover",
+  "bookCoverUrl":"https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1500191671l/61663._SY475_.jpg"
 }
 ```
