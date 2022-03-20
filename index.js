@@ -8,7 +8,7 @@ const server = http.createServer((req, res)=>{
     }
     catch(error){
         res.status = 500;
-        res.end(JSON.stringify({status: 'failed', error: e.message}));
+        res.end(JSON.stringify({status: 'failed', error: error.message}));
     }
 })
 
