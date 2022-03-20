@@ -22,13 +22,15 @@ const server = http.createServer((req, res)=>{
                     //making request to google to get book's goodreads page
                     request(`https://www.google.com/search?q=${query}+goodreads&sourceid=chrome&ie=UTF-8`, (err, response, body)=>{
                         if(err){
-                            res.end(JSON.stringify({error: err}))
+                            throw err.message;
                         }
                         let goodreadsLink = functions.getLinkGoogle(body)
                         //Making request to goodreads to get the book cover image tag
                         request(goodreadsLink, (err, response, body)=>{
-                            if(err)
-                                res.end(JSON.stringify({error: err}))
+                            if(err){
+                                throw err.message;
+                            }
+                                
                             let bookCoverLink = functions.getLinkGoodreads(body)
                             //instantiating new date object to get time finished
                             let d2 = new Date()
