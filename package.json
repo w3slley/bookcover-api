@@ -5,13 +5,17 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node index.js"
+    "start": "ts-node index.ts",
+    "dev": "nodemon index.ts"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "axios": "^0.26.1",
+    "express": "^4.18.1",
     "querystring": "*",
-    "request": "*"
+    "request": "*",
+    "ts-node": "^10.8.1",
+    "typescript": "^4.7.4"
   }
 }
