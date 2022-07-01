@@ -14,7 +14,7 @@ app.get('/bookcover', (req, res) => {
 
 app.get('*', (req, res) => {
     res.setHeader('Content-Type', 'application/json');
-    res.end(JSON.stringify({status: 'failed', error: 'Method not suported yet.'}));
+    res.status(400).json({status: 'failed', error: 'Method not suported yet.'});
 });
 
 app.listen(PORT, ()=>{
