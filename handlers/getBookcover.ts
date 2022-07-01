@@ -1,6 +1,5 @@
 const url = require('url');
 const axios = require('axios');
-
 import { getLinkGoogle, getLinkGoodreads} from '../helpers/bookcover';
 
 type BookcoverResponse = {
@@ -9,11 +8,6 @@ type BookcoverResponse = {
     bookTitle?: string,
     authorName?: string,
     isbn?: string,
-}
-
-type QueryParameter = {
-    bookTitle?: string,
-    authorName?: string,
 }
 
 export const getBookcoverUrl = (req, res) => {
@@ -49,8 +43,6 @@ export const getBookcoverUrl = (req, res) => {
             const bookCoverLink = getLinkGoodreads(body);
             res.json({
                 status: 'success',
-                bookTitle: bookTitle,
-                authorName: authorName,
                 bookcoverUrl: bookCoverLink
             });
         })
