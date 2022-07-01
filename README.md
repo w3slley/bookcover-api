@@ -24,6 +24,6 @@ Response:
 ```
 {
   "status":"success",
-  "bookCoverUrl":"https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1500191671l/61663._SY475_.jpg"
+  "url":"https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1500191671l/61663._SY475_.jpg"
 }
 ```
