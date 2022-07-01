@@ -2,7 +2,7 @@
   "name": "bookcover-api",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "index.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "ts-node index.ts",
@@ -13,6 +13,7 @@
   "dependencies": {
     "axios": "^0.26.1",
     "express": "^4.18.1",
+    "nodemon": "^2.0.18",
     "querystring": "*",
     "request": "*",
     "ts-node": "^10.8.1",
