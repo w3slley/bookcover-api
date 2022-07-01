@@ -17,7 +17,7 @@ It accepts the following two required paramaters:
 
 Example of an http request:
 
-`https://bookcoverapi.herokuapp.com/getBookCover?bookTitle=The+Pale+Blue+Dot&authorName=Carl+Sagan`
+`https://bookcoverapi.herokuapp.com/bookcover?book_title=The+Pale+Blue+Dot&author_name=Carl+Sagan`
 
 Response:
 
