@@ -10,7 +10,7 @@ Right now it only has one method.
 
 ### GET /bookcover
 
-It accepts two paramaters:
+It accepts the following two required paramaters:
 
 - bookTitle (string)
 - authorName (string)
