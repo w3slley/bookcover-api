@@ -1,6 +1,6 @@
 const url = require('url');
 const axios = require('axios');
-import { getLinkGoogle, getLinkGoodreads} from '../helpers/bookcover';
+import { getLinkGoogle, getLinkGoodreads} from '../helpers/getBookCover';
 
 type BookcoverResponse = {
     status: string,
