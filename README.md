@@ -8,12 +8,12 @@ Hope this is helpful for anyone wanting to create web apps that involves dealing
 
 Right now it only has one method.
 
-### getBookCover
+### GET /bookcover
 
-It accepts two paramaters:
+It accepts the following two required paramaters:
 
-- bookTitle
-- authorName
+- bookTitle (string)
+- authorName (string)
 
 Example of an http request:
 
@@ -26,8 +26,6 @@ Response:
   "status":"success",
   "bookTitle":"The Pale Blue Dot",
   "authorName":"Carl Sagan",
-  "delay":"0.834 seconds",
-  "method":"getBookCover",
   "bookCoverUrl":"https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1500191671l/61663._SY475_.jpg"
 }
 ```

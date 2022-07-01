@@ -14,8 +14,6 @@
     "axios": "^0.26.1",
     "express": "^4.18.1",
     "nodemon": "^2.0.18",
-    "querystring": "*",
-    "request": "*",
     "ts-node": "^10.8.1",
     "typescript": "^4.7.4"
   }
