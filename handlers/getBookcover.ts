@@ -4,7 +4,7 @@ import { getLinkGoogle, getLinkGoodreads} from '../helpers/bookcover';
 
 type BookcoverResponse = {
     status: string,
-    bookcoverUrl: string
+    url: string
     bookTitle?: string,
     authorName?: string,
     isbn?: string,
@@ -29,21 +29,17 @@ export const getBookcoverUrl = (req, res) => {
     const bookTitle = query.get('book_title');
     const authorName = query.get('author_name');
     const googleQuery = `${bookTitle} ${authorName} site:goodreads.com/book/show`;
-    const googleSearch = `https://www.google.com/search?q=${googleQuery}&sourceid=chrome&ie=UTF-8`;
-    axios.get(googleSearch)
+    axios.get(`https://www.google.com/search?q=${googleQuery}&sourceid=chrome&ie=UTF-8`)
     .then((googleResponse) => {
-        const body = googleResponse.data;
-        const goodreadsLink = getLinkGoogle(body);
+        const goodreadsLink = getLinkGoogle(googleResponse.data);
         if (!goodreadsLink) {
             return res.status(404).json({status: 'failed', error: 'Bookcover was not found.'});
         }
         axios.get(goodreadsLink)
         .then((goodreadsResponse)=>{
-            const body = goodreadsResponse.data;
-            const bookCoverLink = getLinkGoodreads(body);
             res.json({
                 status: 'success',
-                bookcoverUrl: bookCoverLink
+                url: getLinkGoodreads(goodreadsResponse.data)
             });
         })
         .catch((e: any) => {
