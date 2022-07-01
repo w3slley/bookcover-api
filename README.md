@@ -8,12 +8,12 @@ Hope this is helpful for anyone wanting to create web apps that involves dealing
 
 Right now it only has one method.
 
-### getBookCover
+### GET /bookcover
 
 It accepts two paramaters:
 
-- bookTitle
-- authorName
+- bookTitle (string)
+- authorName (string)
 
 Example of an http request:
 
