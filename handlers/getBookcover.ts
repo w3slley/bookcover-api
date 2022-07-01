@@ -12,7 +12,7 @@ type BookcoverResponse = {
 
 export const getBookcoverUrl = (req, res) => {
     const query = new URLSearchParams(url.parse(req.url).query);
-    if(!query.has('bookTitle') && !query.has('authorName')){
+    if (!query.has('bookTitle') && !query.has('authorName')) {
         return res.end(JSON.stringify({status: 'failed', error: 'Please insert options for search.'}))
     }
 
@@ -25,7 +25,7 @@ export const getBookcoverUrl = (req, res) => {
     .then((googleResponse) => {
         const body = googleResponse.data;
         let goodreadsLink = getLinkGoogle(body);
-        if(!goodreadsLink) {
+        if (!goodreadsLink) {
             return res.status(404).send(JSON.stringify({status: 'failed', error: 'Bookcover was not found.'}))
         }
         //Making request to goodreads to get the book cover image tag
