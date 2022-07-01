@@ -12,8 +12,8 @@ Right now it only has one method.
 
 It accepts the following two required paramaters:
 
-- bookTitle (string)
-- authorName (string)
+- book_title (string)
+- author_name (string)
 
 Example of an http request:
 
@@ -24,8 +24,6 @@ Response:
 ```
 {
   "status":"success",
-  "bookTitle":"The Pale Blue Dot",
-  "authorName":"Carl Sagan",
   "bookCoverUrl":"https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1500191671l/61663._SY475_.jpg"
 }
 ```
