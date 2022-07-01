@@ -24,7 +24,7 @@ export const getBookcoverUrl = (req, res) => {
     });
     if (missingParams.length) {
         const missingParamsStringified = missingParams.reduce((prev, curr) => (prev + ', ' + curr));
-        return res.end(JSON.stringify({status: 'failed', error: `Please insert the following required query parameters: ${missingParamsStringified}`}))
+        return res.status(400).json({status: 'failed', error: `Please insert the following required query parameters: ${missingParamsStringified}`});
     }
     const bookTitle = query.get('book_title');
     const authorName = query.get('author_name');
@@ -35,7 +35,7 @@ export const getBookcoverUrl = (req, res) => {
         const body = googleResponse.data;
         const goodreadsLink = getLinkGoogle(body);
         if (!goodreadsLink) {
-            return res.status(404).send(JSON.stringify({status: 'failed', error: 'Bookcover was not found.'}))
+            return res.status(404).json({status: 'failed', error: 'Bookcover was not found.'});
         }
         axios.get(goodreadsLink)
         .then((goodreadsResponse)=>{
@@ -47,10 +47,10 @@ export const getBookcoverUrl = (req, res) => {
             });
         })
         .catch((e: any) => {
-            res.status(500).send(JSON.stringify({status: 'failed', error: e.message}));
+            res.status(500).json({status: 'failed', error: e.message});
         });
     })
     .catch((e: any) => {
-        res.status(500).send(JSON.stringify({status: 'failed', error: e.message}));
+        res.status(500).json({status: 'failed', error: e.message});
     });
 }
