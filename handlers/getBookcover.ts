@@ -28,7 +28,6 @@ export const getBookcoverUrl = (req, res) => {
         if(!goodreadsLink) {
             return res.status(404).send(JSON.stringify({status: 'failed', error: 'Bookcover was not found.'}))
         }
-
         //Making request to goodreads to get the book cover image tag
         axios.get(goodreadsLink)
         .then((goodreadsResponse)=>{
