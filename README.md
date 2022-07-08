@@ -6,8 +6,6 @@ Hope this is helpful for anyone wanting to create web apps that involves dealing
 
 ## Documentation
 
-Right now it only has one method.
-
 ### GET /bookcover
 
 It accepts the following two required paramaters:
@@ -17,7 +15,9 @@ It accepts the following two required paramaters:
 
 Example of an http request:
 
-`https://bookcoverapi.herokuapp.com/bookcover?book_title=The+Pale+Blue+Dot&author_name=Carl+Sagan`
+```
+https://bookcoverapi.herokuapp.com/bookcover?book_title=The+Pale+Blue+Dot&author_name=Carl+Sagan
+```
 
 Response:
 
@@ -25,5 +25,23 @@ Response:
 {
   "status":"success",
   "url":"https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1500191671l/61663._SY475_.jpg"
+}
+```
+
+### GET /bookcover/:isbn
+Search books by ISBN-13.
+
+Example of an http request:
+
+````
+https://bookcoverapi.herokuapp.com/bookcover/978-0345376596
+```
+
+Response:
+
+```
+{
+  "status":"success",
+  "url":"http://books.google.com/books/content?id=peSODQAAQBAJ&printsec=frontcover&img=1&zoom=1&source=gbs_api"
 }
 ```
