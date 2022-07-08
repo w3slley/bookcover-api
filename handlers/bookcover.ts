@@ -60,7 +60,6 @@ export const getBookcoverFromISBN = (req: Request, res: Response) => {
     }
     axios.get(`https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}&key=${process.env.GOOGLE_BOOKS_API_KEY}`)
     .then(response => {
-        console.log(response.data)
         if (!response.data.totalItems) {
             return res.json([]);
         }
