@@ -33,7 +33,7 @@ Search books by ISBN-13.
 
 Example of an http request:
 
-````
+```
 https://bookcoverapi.herokuapp.com/bookcover/978-0345376596
 ```
 
