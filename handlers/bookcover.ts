@@ -66,6 +66,6 @@ export const getBookcoverFromISBN = (req: Request, res: Response) => {
         return res.json({status: 'success', url: response.data.items[0].volumeInfo.imageLinks.thumbnail});
     })
     .catch((e: any) => {
-        return res.send(500);
+        return res.status(500);
     });
 };
