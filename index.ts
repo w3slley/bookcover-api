@@ -1,16 +1,13 @@
 const PORT = process.env.PORT || 8000;
 const app = require('express')();
-import { getBookcoverUrl } from './handlers/getBookcover';
+require('dotenv').config();
 
-app.get('/bookcover', (req, res) => {
+app.use((req, res, next) => {
     res.setHeader('Content-Type', 'application/json');
-    try{
-        return getBookcoverUrl(req, res);
-    }
-    catch(error){
-        res.send(500, JSON.stringify({status: 'failed', error: error.message}));
-    }
-});
+    next();
+})
+
+app.use('/bookcover', require('./routes/bookcover'));
 
 app.get('*', (req, res) => {
     res.setHeader('Content-Type', 'application/json');
