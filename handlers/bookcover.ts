@@ -1,6 +1,8 @@
 const url = require('url');
 const axios = require('axios');
-import { getLinkGoogle, getLinkGoodreads} from '../helpers/getBookCover';
+import { Request, Response} from 'express';
+import { getLinkGoogle, getLinkGoodreads} from '../helpers/bookcover';
+import { BOOKCOVER_NOT_FOUND, INVALID_ISBN } from '../helpers/messages';
 
 type BookcoverResponse = {
     status: string,
@@ -10,7 +12,7 @@ type BookcoverResponse = {
     isbn?: string,
 }
 
-export const getBookcoverUrl = (req, res) => {
+export const getBookcoverUrl = (req: Request, res: Response) => {
     const requiredParams = [
         'book_title',
         'author_name',
@@ -33,7 +35,7 @@ export const getBookcoverUrl = (req, res) => {
     .then((googleResponse) => {
         const goodreadsLink = getLinkGoogle(googleResponse.data);
         if (!goodreadsLink) {
-            return res.status(404).json({status: 'failed', error: 'Bookcover was not found.'});
+            return res.status(404).json({status: 'failed', error: BOOKCOVER_NOT_FOUND});
         }
         axios.get(goodreadsLink)
         .then((goodreadsResponse)=>{
@@ -50,3 +52,17 @@ export const getBookcoverUrl = (req, res) => {
         res.status(500).json({status: 'failed', error: e.message});
     });
 }
+
+export const getBookcoverFromISBN = (req: Request, res: Response) => {
+    const isbn = req.params.id.replaceAll('-','');
+    if (isbn.length !== 13) {
+        return res.status(400).json({status: 'failed', message: INVALID_ISBN});
+    }
+    axios.get(`https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}&key=${process.env.GOOGLE_BOOKS_API_KEY}`)
+    .then(response => {
+        if (!response.data.totalItems) {
+            return res.json([]);
+        }
+        return res.json({status: 'success', url: response.data.items[0].volumeInfo.imageLinks.thumbnail});
+    });
+};
