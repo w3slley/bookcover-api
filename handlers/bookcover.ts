@@ -35,7 +35,7 @@ export const getBookcoverUrl = async (req: Request, res: Response, next: NextFun
 
 export const getBookcoverFromISBN = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const isbn = req.params.id.replaceAll('-', '');
+    const isbn = req.params.id.replace(/-/g, '');
     if (isbn.length !== 13) {
       throw new HttpException(400, INVALID_ISBN);
     }
