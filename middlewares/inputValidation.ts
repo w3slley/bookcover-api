@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import HttpException from '../exceptions/HttpException';
 const url = require('url');
 
 const inputValidation = (req: Request, res: Response, next: NextFunction) => {
@@ -15,7 +16,10 @@ const inputValidation = (req: Request, res: Response, next: NextFunction) => {
   });
   if (missingParams.length) {
     const missingParamsStringified = missingParams.reduce((prev, curr) => (prev + ', ' + curr));
-    return res.status(400).json({ status: 'failed', error: `Please insert the following required query parameters: ${missingParamsStringified}` });
+    throw new HttpException(
+      400,
+      `Please insert the following required query parameters: ${missingParamsStringified}`
+    );
   }
 
   next();
