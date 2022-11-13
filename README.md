@@ -23,7 +23,6 @@ Response:
 
 ```
 {
-  "status":"success",
   "url":"https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1500191671l/61663._SY475_.jpg"
 }
 ```
@@ -41,7 +40,6 @@ Response:
 
 ```
 {
-  "status":"success",
   "url":"http://books.google.com/books/content?id=peSODQAAQBAJ&printsec=frontcover&img=1&zoom=1&source=gbs_api"
 }
 ```
