@@ -1,3 +1,6 @@
+const GOODREAD_URL = 'https://www.goodreads.com/book/show/';
+const GOODREAD_IMAGE_URL_PATTERN = 'https://images-na.ssl-images-amazon.com/images';
+
 export const find = (str, term, startsBy = 0) => {
   if (str === undefined) {
     return -1
@@ -23,7 +26,7 @@ export const getLinkGoogle = (data) => {
   if (data === undefined) {
     return null;
   }
-  let init = find(data, 'https://www.goodreads.com/book/show/');
+  let init = find(data, GOODREAD_URL);
   let final = find(data, "&", init + 10);
   let linkGoogle = data.slice(init, final);
   return linkGoogle;
@@ -33,8 +36,8 @@ export const getLinkGoodreads = (data) => {
   if (data === undefined) {
     return null;
   }
-  let init = find(data, '<img src="https://i.gr-assets.com/images/');
+  let init = find(data, GOODREAD_IMAGE_URL_PATTERN);
   let final = find(data, '"', init + 10);
-  let linkGoodreads = data.slice(init + 10, final);
+  let linkGoodreads = data.slice(init, final);
   return linkGoodreads;
 }
