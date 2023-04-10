@@ -16,7 +16,7 @@ It accepts the following two required paramaters:
 Example of an http request:
 
 ```
-https://bookcover-api.onrender.com/bookcover?book_title=The+Pale+Blue+Dot&author_name=Carl+Sagan
+https://bookcover-api.herokuapp.com/bookcover?book_title=The+Pale+Blue+Dot&author_name=Carl+Sagan
 ```
 
 Response:
@@ -33,7 +33,7 @@ Search books by ISBN-13.
 Example of an http request:
 
 ```
-https://bookcover-api.onrender.com/bookcover/978-0345376596
+https://bookcover-api.herokuapp.com/bookcover/978-0345376596
 ```
 
 Response:
