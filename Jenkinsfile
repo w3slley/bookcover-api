@@ -6,6 +6,12 @@ pipeline {
                 git(url: 'https://github.com/w3slley/bookcover-api.git', branch: 'testing-jenkins')
             }
         }
+
+        stage('Test') {
+            steps {
+                echo "Testing..."
+            }
+        }
         
     }
 }
