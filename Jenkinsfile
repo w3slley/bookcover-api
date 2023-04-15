@@ -1,20 +1,11 @@
 pipeline {
     agent any
     stages {
-        stage('Build stage') {
+        stage('Checkout code') {
             steps {
-                echo 'Building...'
+                git(url: 'https://github.com/w3slley/bookcover-api.git', branch: 'testing-jenkins')
             }
         }
-        stage('Test stage') {
-            steps {
-                echo 'Testing...'
-            }
-        }
-        stage('Deploy stage') {
-            steps {
-                echo 'Deploying...'
-            }
-        }
+        
     }
 }
