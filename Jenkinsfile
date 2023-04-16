@@ -6,7 +6,7 @@ pipeline {
                 git(url: 'https://github.com/w3slley/bookcover-api.git', branch: 'testing-jenkins')
             }
         }
-        stage('Test') {
+        stage('Testing') {
             steps {
                 sh 'npm install'
                 sh 'npm test'
