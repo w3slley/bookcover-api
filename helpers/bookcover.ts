@@ -1,3 +1,5 @@
+import puppeteer from 'puppeteer';
+
 const GOODREAD_URL = 'https://www.goodreads.com/book/show/';
 const GOODREAD_IMAGE_URL_PATTERN = 'https://images-na.ssl-images-amazon.com/images';
 
@@ -32,12 +34,22 @@ export const getLinkGoogle = (data) => {
   return linkGoogle;
 }
 
-export const getLinkGoodreads = (data) => {
-  if (data === undefined) {
-    return null;
-  }
-  let init = find(data, GOODREAD_IMAGE_URL_PATTERN);
-  let final = find(data, '"', init + 10);
-  let linkGoodreads = data.slice(init, final);
-  return linkGoodreads;
+export const getImageUrl = async (goodreadsLink) => {
+  const browser = await puppeteer.launch();
+  const page = await browser.newPage();
+  await page.goto(goodreadsLink);
+  const imageSelector = `img[src^="${GOODREAD_IMAGE_URL_PATTERN}"]`;
+  await page.waitForSelector(imageSelector, {
+    visible: true,
+  });
+  const src = await page.evaluate((selector) => {
+    const img: any = document.querySelector(selector);
+    if (!img) {
+      throw new Error('Image not found');
+    }
+    return img.src;
+  }, imageSelector);
+  await browser.close();
+
+  return src;
 }
