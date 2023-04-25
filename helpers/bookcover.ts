@@ -35,7 +35,12 @@ export const getLinkGoogle = (data) => {
 }
 
 export const getImageUrl = async (goodreadsLink) => {
-  const browser = await puppeteer.launch();
+  const browser = await puppeteer.launch({
+    'args': [
+      '--no-sandbox',
+      '--disable-setuid-sandbox'
+    ]
+  });
   const page = await browser.newPage();
   await page.goto(goodreadsLink);
   const imageSelector = `img[src^="${GOODREAD_IMAGE_URL_PATTERN}"]`;
