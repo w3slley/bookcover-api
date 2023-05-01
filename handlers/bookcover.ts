@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { getLinkGoogle, getImageUrl } from '../helpers/bookcover';
+import { getGoodreadsUrl as getGoodreadsUrl, getImageUrl } from '../helpers/bookcover';
 import { BOOKCOVER_NOT_FOUND, INVALID_ISBN } from '../helpers/messages';
 import Axios from 'axios';
 import Url from 'url';
@@ -21,11 +21,11 @@ export const getBookcoverUrl = async (req: Request, res: Response, next: NextFun
     const googleQuery = `${bookTitle} ${authorName} site:goodreads.com/book/show`;
     const googleResponse = await Axios.get(`https://www.google.com/search?q=${googleQuery}&sourceid=chrome&ie=UTF-8`);
 
-    const goodreadsLink = getLinkGoogle(googleResponse.data);
-    if (!goodreadsLink) {
+    const goodreadsUrl = getGoodreadsUrl(googleResponse.data);
+    if (!goodreadsUrl) {
       throw new HttpException(404, BOOKCOVER_NOT_FOUND);
     }
-    const url = await getImageUrl(goodreadsLink);
+    const url = await getImageUrl(goodreadsUrl);
     return res.json({ url });
   } catch (error) {
     next(error);

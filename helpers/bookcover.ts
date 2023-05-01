@@ -24,14 +24,14 @@ export const find = (str, term, startsBy = 0) => {
   return -1;
 }
 
-export const getLinkGoogle = (data) => {
+export const getGoodreadsUrl = (data) => {
   if (data === undefined) {
     return null;
   }
   let init = find(data, GOODREAD_URL);
   let final = find(data, "&", init + 10);
-  let linkGoogle = data.slice(init, final);
-  return linkGoogle;
+  let url = data.slice(init, final);
+  return url;
 }
 
 export const getImageUrl = async (goodreadsLink) => {
