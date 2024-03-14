@@ -14,6 +14,7 @@
     "axios": "^0.26.1",
     "dotenv": "^16.0.1",
     "express": "^4.18.1",
+    "jest": "^29.5.0",
     "nodemon": "^2.0.20",
     "puppeteer": "^19.11.1",
     "ts-node": "^10.8.1",
@@ -21,6 +22,7 @@
   },
   "devDependencies": {
     "@types/express": "^4.17.14",
+    "@types/jest": "^29.5.1",
     "@types/node": "^18.11.9"
   }
 }
