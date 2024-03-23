@@ -21,7 +21,6 @@ const inputValidation = (req: Request, res: Response, next: NextFunction) => {
       `Please insert the following required query parameters: ${missingParamsStringified}`
     );
   }
-
   next();
 }
 
