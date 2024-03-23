@@ -6,4 +6,4 @@ const router = express.Router();
 router.get('/', inputValidation, getBookcoverUrl);
 router.get('/:id', getBookcoverFromISBN);
 
-module.exports = router;
+export default router;
