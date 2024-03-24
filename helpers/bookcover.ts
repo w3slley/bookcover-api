@@ -1,6 +1,5 @@
-const GOODREAD_URL = "https://www.goodreads.com/book/show/";
-const GOODREAD_IMAGE_URL_PATTERN =
-  "https://images-na.ssl-images-amazon.com/images";
+export const GOODREAD_URL = "https://www.goodreads.com/book/show/";
+export const GOODREAD_IMAGE_URL_PATTERN = "https://images-na.ssl-images-amazon.com/images";
 
 export const find = (htmlResponse: string, pattern: string, startsBy = 0) => {
   if (htmlResponse === undefined) {
@@ -22,24 +21,11 @@ export const find = (htmlResponse: string, pattern: string, startsBy = 0) => {
   return -1;
 };
 
-export const getGoodreadsUrl = (response: string) => {
+export const getUrl = (response: string, startPattern: string, endPattern: string): string => {
   if (response === undefined) {
     return null;
   }
-
-  let init = find(response, GOODREAD_URL);
-  let final = find(response, "&", init + 10);
-  let goodreadsUrl = response.slice(init, final);
-  return goodreadsUrl;
-};
-
-export const getImageUrl = (response: string) => {
-  if (response === undefined) {
-    return null;
-  }
-
-  let init = find(response, GOODREAD_IMAGE_URL_PATTERN);
-  let final = find(response, '"', init + 10);
-  let imageUrl = response.slice(init, final);
-  return imageUrl;
+  let init = find(response, startPattern);
+  let final = find(response, endPattern, init + 10);
+  return response.slice(init, final);
 };
