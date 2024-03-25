@@ -1,9 +1,9 @@
 package handlers
 
 import (
-	"encoding/json"
-	"fmt"
-	"net/http"
+  "encoding/json"
+  "fmt"
+  "net/http"
 )
 
 const METHOD_NOT_SUPPORTED string = "Method not suported yet."
