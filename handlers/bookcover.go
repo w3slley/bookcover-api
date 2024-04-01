@@ -13,38 +13,40 @@ const GOODREAD_IMAGE_URL_PATTERN = "https://images-na.ssl-images-amazon.com/imag
 const GOODREAD_URL = "https://www.goodreads.com/book/show/"
 
 func Bookcover(w http.ResponseWriter, r *http.Request) {
-  w.Header().Set("Content-Type", "application/json") // TODO: move to middleware
+	w.Header().Set("Content-Type", "application/json") // TODO: move to middleware
 
-  bookTitle := strings.ReplaceAll(r.URL.Query().Get(BOOK_TITLE), " ", "+")
-  authorName := strings.ReplaceAll(r.URL.Query().Get(AUTHOR_NAME), " ", "+")
-  q := bookTitle + "+" + authorName + "site:goodreads.com/book/show"
-  query := "https://www.google.com/search?q="+q+"&sourceid=chrome&ie=UTF-8"
+	bookTitle := strings.ReplaceAll(r.URL.Query().Get(BOOK_TITLE), " ", "+")
+	authorName := strings.ReplaceAll(r.URL.Query().Get(AUTHOR_NAME), " ", "+")
+	q := bookTitle + "+" + authorName + "site:goodreads.com/book/show"
+	query := "https://www.google.com/search?q=" + q + "&sourceid=chrome&ie=UTF-8"
 
-  response, err := http.Get(query)
-  if err != nil {
-    w.Write(BuildErrorResponse(w, HttpException{  
-      statusCode: http.StatusBadRequest, message: BOOKCOVER_NOT_FOUND,
-    }))
-    return
-  }
+	goodreadUrl := GetUrl(GetBody(w, query), GOODREAD_URL, "&")
+	imageUrl := GetUrl(GetBody(w, goodreadUrl), GOODREAD_IMAGE_URL_PATTERN, "\"")
+	fmt.Println(imageUrl)
 
-  body, err := io.ReadAll(response.Body)
-  if err != nil {
-    w.Write(BuildErrorResponse(w, HttpException{  
-      statusCode: http.StatusBadRequest, message: ERROR_READING_BODY,
-    }))
-    return
-  }
-
-  html := string(body)
-
-  // parse html for goodread link, then do the same thing again but for the image url
-  goodreadUrl := GetUrl(html)
-  fmt.Println(goodreadUrl)
 }
 
+func GetBody(w http.ResponseWriter, url string) string {
+	response, err := http.Get(url)
+	if err != nil {
+		w.Write(BuildErrorResponse(w, HttpException{
+			statusCode: http.StatusBadRequest, message: BOOKCOVER_NOT_FOUND,
+		}))
+	}
 
-func GetUrl(data string) string {
-  //strings.Index(haystack, needle)
-  return ""
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		w.Write(BuildErrorResponse(w, HttpException{
+			statusCode: http.StatusBadRequest, message: ERROR_READING_BODY,
+		}))
+	}
+
+	return string(body)
+}
+
+func GetUrl(data string, startPattern string, endPattern string) string {
+	init := strings.Index(data, startPattern)
+	end := strings.Index(data[init:], endPattern)
+
+	return data[init : end+init]
 }
