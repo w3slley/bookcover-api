@@ -9,9 +9,10 @@ import (
 
 const BOOK_TITLE = "book_title"
 const AUTHOR_NAME = "author_name"
-const GOODREAD_IMAGE_URL_PATTERN = "https://images-na.ssl-images-amazon.com/images"
-const GOODREAD_URL = "https://www.goodreads.com/book/show/"
-
+const START_PATTERN_IMAGE_SEARCH = "https://images-na.ssl-images-amazon.com/images"
+const START_PATTERN_GOODREADS_SEARCH = "https://www.goodreads.com/book/show/"
+const END_PATTERN_GOODREADS_SEARCH = "&"
+const END_PATTERN_IMAGE_SEARCH = "\""
 func Bookcover(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json") // TODO: move to middleware
 
@@ -20,10 +21,11 @@ func Bookcover(w http.ResponseWriter, r *http.Request) {
 	q := bookTitle + "+" + authorName + "site:goodreads.com/book/show"
 	query := "https://www.google.com/search?q=" + q + "&sourceid=chrome&ie=UTF-8"
 
-	goodreadUrl := GetUrl(GetBody(w, query), GOODREAD_URL, "&")
-	imageUrl := GetUrl(GetBody(w, goodreadUrl), GOODREAD_IMAGE_URL_PATTERN, "\"")
-	fmt.Println(imageUrl)
+	goodreadUrl := GetUrl(GetBody(w, query), START_PATTERN_GOODREADS_SEARCH, END_PATTERN_GOODREADS_SEARCH)
+	imageUrl := GetUrl(GetBody(w, goodreadUrl), START_PATTERN_IMAGE_SEARCH, END_PATTERN_IMAGE_SEARCH)
 
+	fmt.Println(imageUrl)
+  //return json with url 🚀
 }
 
 func GetBody(w http.ResponseWriter, url string) string {
@@ -48,5 +50,5 @@ func GetUrl(data string, startPattern string, endPattern string) string {
 	init := strings.Index(data, startPattern)
 	end := strings.Index(data[init:], endPattern)
 
-	return data[init : end+init]
+	return data[init:init+end]
 }
