@@ -1,10 +1,10 @@
 package handlers
 
 import (
-	"fmt"
-	"io"
-	"net/http"
-	"strings"
+  "fmt"
+  "io"
+  "net/http"
+  "strings"
 )
 
 const BOOK_TITLE = "book_title"
@@ -13,42 +13,43 @@ const START_PATTERN_IMAGE_SEARCH = "https://images-na.ssl-images-amazon.com/imag
 const START_PATTERN_GOODREADS_SEARCH = "https://www.goodreads.com/book/show/"
 const END_PATTERN_GOODREADS_SEARCH = "&"
 const END_PATTERN_IMAGE_SEARCH = "\""
+
 func Bookcover(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json") // TODO: move to middleware
+  w.Header().Set("Content-Type", "application/json") // TODO: move to middleware
 
-	bookTitle := strings.ReplaceAll(r.URL.Query().Get(BOOK_TITLE), " ", "+")
-	authorName := strings.ReplaceAll(r.URL.Query().Get(AUTHOR_NAME), " ", "+")
-	q := bookTitle + "+" + authorName + "site:goodreads.com/book/show"
-	query := "https://www.google.com/search?q=" + q + "&sourceid=chrome&ie=UTF-8"
+  bookTitle := strings.ReplaceAll(r.URL.Query().Get(BOOK_TITLE), " ", "+")
+  authorName := strings.ReplaceAll(r.URL.Query().Get(AUTHOR_NAME), " ", "+")
+  q := bookTitle + "+" + authorName + "site:goodreads.com/book/show"
+  query := "https://www.google.com/search?q=" + q + "&sourceid=chrome&ie=UTF-8"
 
-	goodreadUrl := GetUrl(GetBody(w, query), START_PATTERN_GOODREADS_SEARCH, END_PATTERN_GOODREADS_SEARCH)
-	imageUrl := GetUrl(GetBody(w, goodreadUrl), START_PATTERN_IMAGE_SEARCH, END_PATTERN_IMAGE_SEARCH)
+  goodreadUrl := GetUrl(GetBody(w, query), START_PATTERN_GOODREADS_SEARCH, END_PATTERN_GOODREADS_SEARCH)
+  imageUrl := GetUrl(GetBody(w, goodreadUrl), START_PATTERN_IMAGE_SEARCH, END_PATTERN_IMAGE_SEARCH)
 
-	fmt.Println(imageUrl)
+  fmt.Println(imageUrl)
   //return json with url 🚀
 }
 
 func GetBody(w http.ResponseWriter, url string) string {
-	response, err := http.Get(url)
-	if err != nil {
-		w.Write(BuildErrorResponse(w, HttpException{
-			statusCode: http.StatusBadRequest, message: BOOKCOVER_NOT_FOUND,
-		}))
-	}
+  response, err := http.Get(url)
+  if err != nil {
+    w.Write(BuildErrorResponse(w, HttpException{
+      statusCode: http.StatusBadRequest, message: BOOKCOVER_NOT_FOUND,
+    }))
+  }
 
-	body, err := io.ReadAll(response.Body)
-	if err != nil {
-		w.Write(BuildErrorResponse(w, HttpException{
-			statusCode: http.StatusBadRequest, message: ERROR_READING_BODY,
-		}))
-	}
+  body, err := io.ReadAll(response.Body)
+  if err != nil {
+    w.Write(BuildErrorResponse(w, HttpException{
+      statusCode: http.StatusBadRequest, message: ERROR_READING_BODY,
+    }))
+  }
 
-	return string(body)
+  return string(body)
 }
 
 func GetUrl(data string, startPattern string, endPattern string) string {
-	init := strings.Index(data, startPattern)
-	end := strings.Index(data[init:], endPattern)
+  init := strings.Index(data, startPattern)
+  end := strings.Index(data[init:], endPattern)
 
-	return data[init:init+end]
+  return data[init:init+end]
 }
