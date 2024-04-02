@@ -1,17 +1,20 @@
 package main
 
 import (
-  "net/http"
-  "strconv"
-  "bookcover-api/handlers"
+	"bookcover-api/handlers"
+	"bookcover-api/middlewares"
+	"fmt"
+	"net/http"
+	"strconv"
 )
 
 const PORT int = 8000
 
 func main() {
-  http.HandleFunc("/", handlers.Home)
-  http.HandleFunc("/bookcover", handlers.Bookcover)
+  http.HandleFunc("/", middlewares.JsonHeaderMiddleware(handlers.Home))
+  http.HandleFunc("/bookcover", middlewares.JsonHeaderMiddleware(handlers.Bookcover))
 
+  fmt.Printf("Server listening at port %d 🚀", PORT)
   http.ListenAndServe(":" + strconv.Itoa(PORT), nil)
 }
 
