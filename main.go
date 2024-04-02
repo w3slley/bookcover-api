@@ -14,7 +14,7 @@ func main() {
   http.HandleFunc("/", middlewares.JsonHeaderMiddleware(handlers.Home))
   http.HandleFunc("/bookcover", middlewares.JsonHeaderMiddleware(handlers.Bookcover))
 
-  fmt.Printf("Server listening at port %d 🚀", PORT)
+  fmt.Printf("Server listening at port %d 🚀\n", PORT)
   http.ListenAndServe(":" + strconv.Itoa(PORT), nil)
 }
 

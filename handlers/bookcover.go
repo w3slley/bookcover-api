@@ -1,10 +1,9 @@
 package handlers
 
 import (
-  "fmt"
-  "io"
-  "net/http"
-  "strings"
+	"io"
+	"net/http"
+	"strings"
 )
 
 const BOOK_TITLE = "book_title"
@@ -15,21 +14,18 @@ const END_PATTERN_GOODREADS_SEARCH = "&"
 const END_PATTERN_IMAGE_SEARCH = "\""
 
 func Bookcover(w http.ResponseWriter, r *http.Request) {
-  w.Header().Set("Content-Type", "application/json") // TODO: move to middleware
-
   bookTitle := strings.ReplaceAll(r.URL.Query().Get(BOOK_TITLE), " ", "+")
   authorName := strings.ReplaceAll(r.URL.Query().Get(AUTHOR_NAME), " ", "+")
   q := bookTitle + "+" + authorName + "site:goodreads.com/book/show"
   query := "https://www.google.com/search?q=" + q + "&sourceid=chrome&ie=UTF-8"
 
-  goodreadUrl := GetUrl(GetBody(w, query), START_PATTERN_GOODREADS_SEARCH, END_PATTERN_GOODREADS_SEARCH)
-  imageUrl := GetUrl(GetBody(w, goodreadUrl), START_PATTERN_IMAGE_SEARCH, END_PATTERN_IMAGE_SEARCH)
+  goodreadUrl := getUrl(getBody(w, query), START_PATTERN_GOODREADS_SEARCH, END_PATTERN_GOODREADS_SEARCH)
+  imageUrl := getUrl(getBody(w, goodreadUrl), START_PATTERN_IMAGE_SEARCH, END_PATTERN_IMAGE_SEARCH)
 
-  fmt.Println(imageUrl)
-  //return json with url 🚀
+  w.Write(BuildSuccessResponse(w, imageUrl))
 }
 
-func GetBody(w http.ResponseWriter, url string) string {
+func getBody(w http.ResponseWriter, url string) string {
   response, err := http.Get(url)
   if err != nil {
     w.Write(BuildErrorResponse(w, HttpException{
@@ -47,7 +43,7 @@ func GetBody(w http.ResponseWriter, url string) string {
   return string(body)
 }
 
-func GetUrl(data string, startPattern string, endPattern string) string {
+func getUrl(data string, startPattern string, endPattern string) string {
   init := strings.Index(data, startPattern)
   end := strings.Index(data[init:], endPattern)
 
