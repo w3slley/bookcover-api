@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -12,23 +13,21 @@ type HttpException struct {
 }
 
 func BuildSuccessResponse(w http.ResponseWriter, url string) []byte {
-  jsonObj := map[string] string { "url": url }
-  res, err := json.Marshal(jsonObj)
-  if err != nil {
-    fmt.Println(err)
-  }
-
+  var buffer bytes.Buffer
+  enc := json.NewEncoder(&buffer)
+  enc.SetEscapeHTML(false)
+  enc.Encode(map[string] string { "url": url })
   w.WriteHeader(200)
-  return res
+
+  return buffer.Bytes()
 }
 
 func BuildErrorResponse(w http.ResponseWriter, ex HttpException) []byte {
-  jsonObj := map[string] string { "error": ex.message }
-  res, err := json.Marshal(jsonObj)
+  data, err := json.Marshal(map[string] string { "error": ex.message })
   if err != nil {
     fmt.Println(err)
   }
 
   w.WriteHeader(ex.statusCode)
-  return res
+  return data
 }
