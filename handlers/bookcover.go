@@ -51,6 +51,10 @@ func BookcoverByIsbn(w http.ResponseWriter, r *http.Request) {
   res := getBody(w, query)
   var googleBook GoogleBook = GoogleBook{} 
   if err := json.Unmarshal(res, &googleBook); err != nil {
+    w.Write(BuildErrorResponse(w, HttpException{
+      statusCode: http.StatusInternalServerError,
+      message: INTERNAL_SERVER_ERROR,
+    }))
     fmt.Println("Error while parsing JSON body")
     return
   }
@@ -78,7 +82,7 @@ func getBody(w http.ResponseWriter, url string) []byte {
   body, err := io.ReadAll(response.Body)
   if err != nil {
     w.Write(BuildErrorResponse(w, HttpException{
-      statusCode: http.StatusBadRequest, message: ERROR_READING_BODY,
+      statusCode: http.StatusInternalServerError, message: ERROR_READING_BODY,
     }))
   }
 
