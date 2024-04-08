@@ -1,12 +1,12 @@
 package handlers
 
 import (
-	"encoding/json"
-	"fmt"
-	"io"
-	"net/http"
-	"os"
-	"strings"
+  "encoding/json"
+  "fmt"
+  "io"
+  "net/http"
+  "os"
+  "strings"
 )
 
 const GOOGLE_BOOKS_API_KEY = "GOOGLE_BOOKS_API_KEY"
@@ -18,8 +18,19 @@ const END_PATTERN_GOODREADS_SEARCH = "&"
 const END_PATTERN_IMAGE_SEARCH = "\""
 
 func BookcoverSearch(w http.ResponseWriter, r *http.Request) {
-  bookTitle := strings.ReplaceAll(r.URL.Query().Get(BOOK_TITLE), " ", "+")
-  authorName := strings.ReplaceAll(r.URL.Query().Get(AUTHOR_NAME), " ", "+")
+  bookTitle := r.URL.Query().Get(BOOK_TITLE)
+  authorName := r.URL.Query().Get(AUTHOR_NAME)
+
+  if(bookTitle == "" || authorName == "") {
+    w.Write(BuildErrorResponse(w, HttpException{
+      statusCode: http.StatusBadRequest,
+      message: MANDATORY_PARAMS_MISSING,
+    }))
+    return
+  }
+
+  bookTitle = strings.ReplaceAll(bookTitle, " ", "+")
+  authorName = strings.ReplaceAll(authorName, " ", "+")
   q := bookTitle + "+" + authorName + "site:goodreads.com/book/show"
   query := "https://www.google.com/search?q=" + q + "&sourceid=chrome&ie=UTF-8"
 
