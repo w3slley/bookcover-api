@@ -1,13 +1,60 @@
-package handlers
+package routes
 
 import (
   "encoding/json"
+	"bytes"
   "fmt"
   "io"
   "net/http"
   "os"
   "strings"
+
+  "bookcover-api/internal/helpers"
 )
+
+type HttpException struct {
+  statusCode int
+  message string
+}
+
+type GoogleBook struct{
+  Kind string `json:"kind"`
+  TotalItems int `json:"totalItems"` 
+  Items []BookItem `json:"items"`
+}
+
+type BookItem struct {
+  VolumeInfo BookInfo `json:"volumeInfo"`
+}
+
+type BookInfo struct {
+  ImageLinks ImageLinks `json:"imageLinks"`
+}
+
+type ImageLinks struct {
+  SmallThumbnail string `json:"smallThumbnail"`
+  Thumbnail string `json:"thumbnail"`
+}
+
+func BuildSuccessResponse(w http.ResponseWriter, url string) []byte {
+  var buffer bytes.Buffer
+  enc := json.NewEncoder(&buffer)
+  enc.SetEscapeHTML(false)
+  enc.Encode(map[string] string { "url": url })
+  w.WriteHeader(200)
+
+  return buffer.Bytes()
+}
+
+func BuildErrorResponse(w http.ResponseWriter, ex HttpException) []byte {
+  data, err := json.Marshal(map[string] string { "error": ex.message })
+  if err != nil {
+    fmt.Println(err)
+  }
+
+  w.WriteHeader(ex.statusCode)
+  return data
+}
 
 const GOOGLE_BOOKS_API_KEY = "GOOGLE_BOOKS_API_KEY"
 const BOOK_TITLE = "book_title"
@@ -24,14 +71,14 @@ func BookcoverSearch(w http.ResponseWriter, r *http.Request) {
   if(bookTitle == "" || authorName == "") {
     w.Write(BuildErrorResponse(w, HttpException{
       statusCode: http.StatusBadRequest,
-      message: MANDATORY_PARAMS_MISSING,
+      message: helpers.MANDATORY_PARAMS_MISSING,
     }))
     return
   }
 
   bookTitle = strings.ReplaceAll(bookTitle, " ", "+")
   authorName = strings.ReplaceAll(authorName, " ", "+")
-  q := bookTitle + "+" + authorName + "site:goodreads.com/book/show"
+  q := bookTitle + "+" + authorName + "+site:goodreads.com/book/show"
   query := "https://www.google.com/search?q=" + q + "&sourceid=chrome&ie=UTF-8"
 
   goodreadUrl := getUrl(getBody(w, query), START_PATTERN_GOODREADS_SEARCH, END_PATTERN_GOODREADS_SEARCH)
@@ -43,7 +90,7 @@ func BookcoverSearch(w http.ResponseWriter, r *http.Request) {
 func BookcoverByIsbn(w http.ResponseWriter, r *http.Request) {
   isbn := strings.ReplaceAll(r.PathValue("isbn"), "-", "")
   if(len(isbn) != 13) {
-    w.Write(BuildErrorResponse(w, HttpException{ statusCode: http.StatusBadRequest, message: INVALID_ISBN }))
+    w.Write(BuildErrorResponse(w, HttpException{ statusCode: http.StatusBadRequest, message: helpers.INVALID_ISBN }))
     return
   }
 
@@ -53,7 +100,7 @@ func BookcoverByIsbn(w http.ResponseWriter, r *http.Request) {
   if err := json.Unmarshal(res, &googleBook); err != nil {
     w.Write(BuildErrorResponse(w, HttpException{
       statusCode: http.StatusInternalServerError,
-      message: INTERNAL_SERVER_ERROR,
+      message: helpers.INTERNAL_SERVER_ERROR,
     }))
     fmt.Println("Error while parsing JSON body")
     return
@@ -62,7 +109,7 @@ func BookcoverByIsbn(w http.ResponseWriter, r *http.Request) {
   if googleBook.TotalItems == 0 {
     w.Write(BuildErrorResponse(w, HttpException{ 
       statusCode: http.StatusBadRequest,
-      message: BOOKCOVER_NOT_FOUND,
+      message: helpers.BOOKCOVER_NOT_FOUND,
     }))
     return
   }
@@ -75,14 +122,14 @@ func getBody(w http.ResponseWriter, url string) []byte {
   response, err := http.Get(url)
   if err != nil {
     w.Write(BuildErrorResponse(w, HttpException{
-      statusCode: http.StatusBadRequest, message: BOOKCOVER_NOT_FOUND,
+      statusCode: http.StatusBadRequest, message: helpers.BOOKCOVER_NOT_FOUND,
     }))
   }
 
   body, err := io.ReadAll(response.Body)
   if err != nil {
     w.Write(BuildErrorResponse(w, HttpException{
-      statusCode: http.StatusInternalServerError, message: ERROR_READING_BODY,
+      statusCode: http.StatusInternalServerError, message: helpers.ERROR_READING_BODY,
     }))
   }
 

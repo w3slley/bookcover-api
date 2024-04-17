@@ -1,4 +1,4 @@
-package handlers
+package helpers
 
 const METHOD_NOT_SUPPORTED string = "Method not suported yet."
 const BOOKCOVER_NOT_FOUND string = "Bookcover was not found."
