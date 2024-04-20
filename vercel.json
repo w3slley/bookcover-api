@@ -1,9 +1,0 @@
-{
-  "version": 2,
-  "builds": [
-    { "src": "index.ts", "use": "@now/node", "config": { "maxLambdaSize": "15mb" } }
-  ],
-  "routes": [
-    { "src": "/(.*)", "dest": "/index.ts" }
-  ]
-}
