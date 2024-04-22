@@ -5,6 +5,7 @@ When you're ready, start your application by running:
 
 Your application will be available at http://localhost:8000.
 
+
 ### Deploying your application to the cloud
 
 First, build your image, e.g.: `docker build -t myapp .`.
@@ -20,3 +21,4 @@ docs for more detail on building and pushing.
 
 ### References
 * [Docker's Go guide](https://docs.docker.com/language/golang/)
+
