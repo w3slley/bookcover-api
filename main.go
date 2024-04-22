@@ -6,18 +6,11 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-
-	"github.com/joho/godotenv"
 )
 
 const PORT int = 8000
 
 func main() {
-	if err := godotenv.Load(); err != nil {
-		fmt.Println("Error loading .env file")
-		return
-	}
-
 	http.HandleFunc("/", middlewares.JsonHeaderMiddleware(routes.Home))
 	http.HandleFunc("/bookcover", middlewares.JsonHeaderMiddleware(routes.BookcoverSearch))
 	http.HandleFunc("/bookcover/{isbn}", middlewares.JsonHeaderMiddleware(routes.BookcoverByIsbn))
