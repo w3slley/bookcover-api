@@ -25,4 +25,3 @@ func main() {
   fmt.Printf("Server listening at port %d 🚀\n", PORT)
   http.ListenAndServe(":" + strconv.Itoa(PORT), nil)
 }
-

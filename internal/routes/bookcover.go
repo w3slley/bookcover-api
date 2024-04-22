@@ -94,6 +94,7 @@ func BookcoverByIsbn(w http.ResponseWriter, r *http.Request) {
     return
   }
 
+  //TODO: Remove google books api call and make a google search instead (prevent api key being used multiple time by users)
   query := "https://www.googleapis.com/books/v1/volumes?q=isbn:" + isbn + "&key" + os.Getenv(GOOGLE_BOOKS_API_KEY)
   res := getBody(w, query)
   var googleBook GoogleBook = GoogleBook{} 
