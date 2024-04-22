@@ -8,7 +8,7 @@ Hope this is helpful for anyone wanting to create web apps that involves dealing
 
 ### GET /bookcover
 
-It accepts the following two required paramaters:
+It accepts the following two required parameters:
 
 - book_title (string)
 - author_name (string)
@@ -16,14 +16,14 @@ It accepts the following two required paramaters:
 Example of an http request:
 
 ```
-https://api.bookcover.longitood.com/bookcover?book_title=The+Pale+Blue+Dot&author_name=Carl+Sagan
+http://bookcover.longitood.com/bookcover?book_title=The+Pale+Blue+Dot&author_name=Carl+Sagan
 ```
 
 Response:
 
 ```
 {
-  "url":"https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1500191671l/61663._SY475_.jpg"
+  "url":"http://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1500191671l/61663._SY475_.jpg"
 }
 ```
 
@@ -33,13 +33,14 @@ Search books by ISBN-13.
 Example of an http request:
 
 ```
-https://api.bookcover.longitood.com/bookcover/978-0345376596
+http://bookcover.longitood.com/bookcover/978-0345376596
 ```
 
 Response:
 
 ```
 {
-  "url":"http://books.google.com/books/content?id=peSODQAAQBAJ&printsec=frontcover&img=1&zoom=1&source=gbs_api"
+    "url": "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1500191671i/61663.jpg"
 }
+
 ```
