@@ -1,11 +1,11 @@
 package main
 
 import (
+	"bookcover-api/internal/middlewares"
+	"bookcover-api/internal/routes"
 	"fmt"
 	"net/http"
 	"strconv"
-	"bookcover-api/internal/routes"
-	"bookcover-api/internal/middlewares"
 
 	"github.com/joho/godotenv"
 )
@@ -13,15 +13,15 @@ import (
 const PORT int = 8000
 
 func main() {
-  if err := godotenv.Load(); err != nil {
-    fmt.Println("Error loading .env file")
-    return
-  }
+	if err := godotenv.Load(); err != nil {
+		fmt.Println("Error loading .env file")
+		return
+	}
 
-  http.HandleFunc("/", middlewares.JsonHeaderMiddleware(routes.Home))
-  http.HandleFunc("/bookcover", middlewares.JsonHeaderMiddleware(routes.BookcoverSearch))
-  http.HandleFunc("/bookcover/{isbn}", middlewares.JsonHeaderMiddleware(routes.BookcoverByIsbn))
+	http.HandleFunc("/", middlewares.JsonHeaderMiddleware(routes.Home))
+	http.HandleFunc("/bookcover", middlewares.JsonHeaderMiddleware(routes.BookcoverSearch))
+	http.HandleFunc("/bookcover/{isbn}", middlewares.JsonHeaderMiddleware(routes.BookcoverByIsbn))
 
-  fmt.Printf("Server listening at port %d 🚀\n", PORT)
-  http.ListenAndServe(":" + strconv.Itoa(PORT), nil)
+	fmt.Printf("Server listening at port %d 🚀\n", PORT)
+	http.ListenAndServe(":"+strconv.Itoa(PORT), nil)
 }
