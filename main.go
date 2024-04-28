@@ -15,6 +15,10 @@ func main() {
 	http.HandleFunc("/bookcover", middlewares.JsonHeaderMiddleware(routes.BookcoverSearch))
 	http.HandleFunc("/bookcover/{isbn}", middlewares.JsonHeaderMiddleware(routes.BookcoverByIsbn))
 
+	http.HandleFunc("/", middlewares.CorsHeaderMiddlware(routes.Home))
+	http.HandleFunc("/bookcover", middlewares.CorsHeaderMiddlware(routes.BookcoverSearch))
+	http.HandleFunc("/bookcover/{isbn}", middlewares.CorsHeaderMiddlware(routes.BookcoverByIsbn))
+
 	fmt.Printf("Server listening at port %d 🚀\n", PORT)
 	http.ListenAndServe(":"+strconv.Itoa(PORT), nil)
 }
