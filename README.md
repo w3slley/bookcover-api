@@ -16,14 +16,14 @@ It accepts the following two required parameters:
 Example of an http request:
 
 ```
-http://bookcover.longitood.com/bookcover?book_title=The+Pale+Blue+Dot&author_name=Carl+Sagan
+https://bookcover.longitood.com/bookcover?book_title=The+Pale+Blue+Dot&author_name=Carl+Sagan
 ```
 
 Response:
 
 ```
 {
-  "url":"http://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1500191671l/61663._SY475_.jpg"
+  "url":"https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1500191671l/61663._SY475_.jpg"
 }
 ```
 
@@ -33,7 +33,7 @@ Search books by ISBN-13.
 Example of an http request:
 
 ```
-http://bookcover.longitood.com/bookcover/978-0345376596
+https://bookcover.longitood.com/bookcover/978-0345376596
 ```
 
 Response:
