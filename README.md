@@ -2,8 +2,6 @@
 
 Since I discovered to be quite hard to find comprehensive APIs (tried both Goodreads' and Google's) to retrieve book cover images for a personal project, I decided to create this API which does exactly that. I plan to add more features on it as times goes on.
 
-Hope this is helpful for anyone wanting to create web apps that involves dealing with book covers in one way or another.
-
 ## Documentation
 
 ### GET /bookcover
