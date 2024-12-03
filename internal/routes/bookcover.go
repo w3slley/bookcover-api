@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"strings"
 
@@ -150,6 +151,8 @@ func getUrl(data []byte, startPattern string, endPattern string) (string, error)
 	body := string(data)
 	init := strings.Index(body, startPattern)
 	if init == -1 {
+		log.Printf("Initial pattern with initialPattern '%s' and endPattern '%s' was not found", startPattern, endPattern)
+		log.Printf("Response body:\n%s", body)
 		err := fmt.Errorf("Initial pattern not found")
 		return "", err
 	}
