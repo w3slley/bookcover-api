@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"regexp"
 	"strings"
 
 	"bookcover-api/internal/helpers"
@@ -16,7 +17,7 @@ const (
 	GOOGLE_BOOKS_API_KEY                  = "GOOGLE_BOOKS_API_KEY"
 	BOOK_TITLE                            = "book_title"
 	AUTHOR_NAME                           = "author_name"
-	START_PATTERN_GOODREADS_IMAGE_SEARCH  = "https://images-na.ssl-images-amazon.com/images"
+	START_PATTERN_GOODREADS_IMAGE_SEARCH  = "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/"
 	START_PATTERN_GOODREADS_GOOGLE_SEARCH = "https://www.goodreads.com/book/show/"
 	START_PATTERN_AMAZON_GOOGLE_SEARCH    = "https://www.amazon.com/"
 	START_PATTERN_AMAZON_IMAGE_SEARCH     = "https://m.media-amazon.com/images/"
@@ -53,7 +54,7 @@ func BuildErrorResponse(w http.ResponseWriter, ex HttpException) []byte {
 func BookcoverSearch(w http.ResponseWriter, r *http.Request) {
 	bookTitle := r.URL.Query().Get(BOOK_TITLE)
 	authorName := r.URL.Query().Get(AUTHOR_NAME)
-	if bookTitle == "" || authorName == "" {
+	if bookTitle == "" {
 		w.Write(BuildErrorResponse(w, HttpException{
 			statusCode: http.StatusBadRequest,
 			message:    helpers.MANDATORY_PARAMS_MISSING,
@@ -62,31 +63,13 @@ func BookcoverSearch(w http.ResponseWriter, r *http.Request) {
 	}
 	bookTitle = strings.ReplaceAll(bookTitle, " ", "+")
 	authorName = strings.ReplaceAll(authorName, " ", "+")
-	q := bookTitle + "+" + authorName + "+site:goodreads.com/book/show"
-	query := "https://www.google.com/search?q=" + q + "&sourceid=chrome&ie=UTF-8"
+
+	query := "https://www.goodreads.com/search?utf8=%E2%9C%93&q=" + bookTitle + "&search_type=books"
 
 	body, err := getBody(query)
 	if err != nil {
 		w.Write(BuildErrorResponse(w, HttpException{
 			statusCode: http.StatusBadRequest,
-			message:    err.Error(),
-		}))
-		return
-	}
-
-	goodreadUrl, err := getUrl(body, START_PATTERN_GOODREADS_GOOGLE_SEARCH, END_PATTERN_GOODREADS_GOOGLE_SEARCH)
-	if err != nil {
-		w.Write(BuildErrorResponse(w, HttpException{
-			statusCode: http.StatusInternalServerError,
-			message:    err.Error(),
-		}))
-		return
-	}
-
-	body, err = getBody(goodreadUrl)
-	if err != nil {
-		w.Write(BuildErrorResponse(w, HttpException{
-			statusCode: http.StatusInternalServerError,
 			message:    err.Error(),
 		}))
 		return
@@ -152,14 +135,15 @@ func getUrl(data []byte, startPattern string, endPattern string) (string, error)
 	init := strings.Index(body, startPattern)
 	if init == -1 {
 		log.Printf("Initial pattern with initialPattern '%s' and endPattern '%s' was not found", startPattern, endPattern)
-		log.Printf("Response body:\n%s", body)
-		err := fmt.Errorf("Initial pattern not found")
+		err := fmt.Errorf("Error while retrieving the image")
 		return "", err
 	}
 	end := strings.Index(body[init:], endPattern)
-	if init == -1 {
-		err := fmt.Errorf("End pattern not found")
+	if end == -1 {
+		log.Printf("Initial pattern with initialPattern '%s' and endPattern '%s' was not found", startPattern, endPattern)
+		err := fmt.Errorf("Error while retrieving the image")
 		return "", err
 	}
-	return body[init : init+end], nil
+	imageUrl := regexp.MustCompile(`_[^_]*_.`).ReplaceAllString(body[init:init+end], "") // Remove small image indicator to retrieve bigger cover image
+	return imageUrl, nil
 }

@@ -6,10 +6,10 @@ Since I discovered to be quite hard to find comprehensive APIs (tried both Goodr
 
 ### GET /bookcover
 
-It accepts the following two required parameters:
+It accepts the following parameters:
 
-- book_title (string)
-- author_name (string)
+- book_title (string, required)
+- author_name (string, optional)
 
 Example of an http request:
 
@@ -21,7 +21,7 @@ Response:
 
 ```
 {
-  "url":"https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1500191671l/61663._SY475_.jpg"
+  "url":"https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1388620656i/55030.jpg"
 }
 ```
 
