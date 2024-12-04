@@ -11,19 +11,14 @@ import (
 	"strings"
 
 	"bookcover-api/internal/helpers"
+
+	"github.com/PuerkitoBio/goquery"
 )
 
 const (
-	GOOGLE_BOOKS_API_KEY                  = "GOOGLE_BOOKS_API_KEY"
-	BOOK_TITLE                            = "book_title"
-	AUTHOR_NAME                           = "author_name"
-	START_PATTERN_GOODREADS_IMAGE_SEARCH  = "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/"
-	START_PATTERN_GOODREADS_GOOGLE_SEARCH = "https://www.goodreads.com/book/show/"
-	START_PATTERN_AMAZON_GOOGLE_SEARCH    = "https://www.amazon.com/"
-	START_PATTERN_AMAZON_IMAGE_SEARCH     = "https://m.media-amazon.com/images/"
-	END_PATTERN_AMAZON_GOOGLE_SEARCH      = "&amp"
-	END_PATTERN_GOODREADS_GOOGLE_SEARCH   = "&"
-	END_PATTERN_IMAGE_SEARCH              = "\""
+	GOOGLE_BOOKS_API_KEY = "GOOGLE_BOOKS_API_KEY"
+	BOOK_TITLE           = "book_title"
+	AUTHOR_NAME          = "author_name"
 )
 
 type HttpException struct {
@@ -75,7 +70,8 @@ func BookcoverSearch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	imageUrl, err := getUrl(body, START_PATTERN_GOODREADS_IMAGE_SEARCH, END_PATTERN_IMAGE_SEARCH)
+	imageUrl, err := GetUrlForQuerySearch(body, bookTitle, authorName)
+	log.Print(imageUrl)
 	if err != nil {
 		w.Write(BuildErrorResponse(w, HttpException{
 			statusCode: http.StatusInternalServerError,
@@ -104,7 +100,7 @@ func BookcoverByIsbn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	imageUrl, err := getUrl(body, START_PATTERN_GOODREADS_IMAGE_SEARCH, END_PATTERN_IMAGE_SEARCH)
+	imageUrl, err := GetUrlForISBNSearch(body)
 	if err != nil {
 		w.Write(BuildErrorResponse(w, HttpException{
 			statusCode: http.StatusInternalServerError,
@@ -130,20 +126,47 @@ func getBody(url string) ([]byte, error) {
 	return body, nil
 }
 
-func getUrl(data []byte, startPattern string, endPattern string) (string, error) {
-	body := string(data)
-	init := strings.Index(body, startPattern)
-	if init == -1 {
-		log.Printf("Initial pattern with initialPattern '%s' and endPattern '%s' was not found", startPattern, endPattern)
-		err := fmt.Errorf("Error while retrieving the image")
-		return "", err
+func GetUrlForISBNSearch(data []byte) (string, error) {
+	html := string(data)
+	reader := strings.NewReader(html)
+	doc, err := goquery.NewDocumentFromReader(reader)
+	if err != nil {
+		return "", fmt.Errorf("Error creating document: %v", err)
 	}
-	end := strings.Index(body[init:], endPattern)
-	if end == -1 {
-		log.Printf("Initial pattern with initialPattern '%s' and endPattern '%s' was not found", startPattern, endPattern)
-		err := fmt.Errorf("Error while retrieving the image")
-		return "", err
+	imageUrl, exists := doc.Find(".BookCover__image").First().Find("img").First().Attr("src")
+	if !exists {
+		return "", fmt.Errorf("Image was not found")
 	}
-	imageUrl := regexp.MustCompile(`_[^_]*_.`).ReplaceAllString(body[init:init+end], "") // Remove small image indicator to retrieve bigger cover image
 	return imageUrl, nil
+}
+
+func GetUrlForQuerySearch(data []byte, bookTitle string, authorName string) (string, error) {
+	doc, err := parseHTML(data)
+	if err != nil {
+		return "", err
+	}
+
+	url := ""
+	doc.Find("tr[itemscope]").Each(func(i int, s *goquery.Selection) {
+		foundUrl, urlExists := s.Find(".bookCover").First().Attr("src")
+		foundAuthorName := strings.ReplaceAll(s.Find(".authorName").First().Text(), " ", "+")
+		if urlExists && foundAuthorName == authorName {
+			url = foundUrl
+		}
+	})
+	if url == "" {
+		return url, fmt.Errorf("Image was not found")
+	}
+	imageUrl := regexp.MustCompile(`_[^_]*_.`).ReplaceAllString(url, "") // Remove small image indicator to retrieve bigger cover image
+	return imageUrl, nil
+}
+
+func parseHTML(data []byte) (*goquery.Document, error) {
+	html := string(data)
+	reader := strings.NewReader(html)
+	doc, err := goquery.NewDocumentFromReader(reader)
+	if err != nil {
+		return nil, fmt.Errorf("Error creating document: %v", err)
+	}
+	return doc, nil
 }
