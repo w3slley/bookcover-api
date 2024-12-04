@@ -19,6 +19,7 @@ const (
 	GOOGLE_BOOKS_API_KEY = "GOOGLE_BOOKS_API_KEY"
 	BOOK_TITLE           = "book_title"
 	AUTHOR_NAME          = "author_name"
+	QUERY_SEPARATOR      = "+"
 )
 
 type HttpException struct {
@@ -56,8 +57,8 @@ func BookcoverSearch(w http.ResponseWriter, r *http.Request) {
 		}))
 		return
 	}
-	bookTitle = strings.ReplaceAll(bookTitle, " ", "+")
-	authorName = strings.ReplaceAll(authorName, " ", "+")
+	bookTitle = strings.ReplaceAll(bookTitle, " ", QUERY_SEPARATOR)
+	authorName = strings.ReplaceAll(authorName, " ", QUERY_SEPARATOR)
 
 	query := "https://www.goodreads.com/search?utf8=%E2%9C%93&q=" + bookTitle + "&search_type=books"
 
@@ -149,8 +150,12 @@ func GetUrlForQuerySearch(data []byte, bookTitle string, authorName string) (str
 	url := ""
 	doc.Find("tr[itemscope]").Each(func(i int, s *goquery.Selection) {
 		foundUrl, urlExists := s.Find(".bookCover").First().Attr("src")
-		foundAuthorName := strings.ReplaceAll(s.Find(".authorName").First().Text(), " ", "+")
-		if url == "" && urlExists && foundAuthorName == authorName {
+
+		authorNameFormatted := strings.ReplaceAll(authorName, QUERY_SEPARATOR, " ")
+		foundAuthorName := strings.ReplaceAll(s.Find(".authorName").First().Text(), QUERY_SEPARATOR, " ")
+		if url == "" &&
+			urlExists &&
+			strings.ToLower(foundAuthorName) == strings.ToLower(authorNameFormatted) {
 			url = foundUrl
 		}
 	})
