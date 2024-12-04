@@ -6,10 +6,9 @@ Since I discovered to be quite hard to find comprehensive APIs (tried both Goodr
 
 ### GET /bookcover
 
-It accepts the following parameters:
-
-- book_title (string, required)
-- author_name (string, optional)
+It accepts the following two required parameters:
+- book_title (string)
+- author_name (string)
 
 Example of an http request:
 

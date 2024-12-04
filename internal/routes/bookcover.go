@@ -49,7 +49,7 @@ func BuildErrorResponse(w http.ResponseWriter, ex HttpException) []byte {
 func BookcoverSearch(w http.ResponseWriter, r *http.Request) {
 	bookTitle := r.URL.Query().Get(BOOK_TITLE)
 	authorName := r.URL.Query().Get(AUTHOR_NAME)
-	if bookTitle == "" {
+	if bookTitle == "" || authorName == "" {
 		w.Write(BuildErrorResponse(w, HttpException{
 			statusCode: http.StatusBadRequest,
 			message:    helpers.MANDATORY_PARAMS_MISSING,
