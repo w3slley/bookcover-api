@@ -150,7 +150,7 @@ func GetUrlForQuerySearch(data []byte, bookTitle string, authorName string) (str
 	doc.Find("tr[itemscope]").Each(func(i int, s *goquery.Selection) {
 		foundUrl, urlExists := s.Find(".bookCover").First().Attr("src")
 		foundAuthorName := strings.ReplaceAll(s.Find(".authorName").First().Text(), " ", "+")
-		if urlExists && foundAuthorName == authorName {
+		if url == "" && urlExists && foundAuthorName == authorName {
 			url = foundUrl
 		}
 	})
