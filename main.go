@@ -2,16 +2,24 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 
 	"bookcover-api/internal/middlewares"
 	"bookcover-api/internal/routes"
+
+	"github.com/joho/godotenv"
 )
 
 const PORT int = 8000
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Print("Error loading .env file")
+	}
+
 	http.HandleFunc("/", middlewares.Chain(
 		routes.Home,
 		middlewares.JsonHeaderMiddleware(),

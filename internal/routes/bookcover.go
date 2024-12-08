@@ -10,9 +10,11 @@ import (
 	"regexp"
 	"strings"
 
+	"bookcover-api/internal/cache"
 	"bookcover-api/internal/helpers"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/bradfitz/gomemcache/memcache"
 )
 
 const (
@@ -60,8 +62,18 @@ func BookcoverSearch(w http.ResponseWriter, r *http.Request) {
 	bookTitle = strings.ReplaceAll(bookTitle, " ", QUERY_SEPARATOR)
 	authorName = strings.ReplaceAll(authorName, " ", QUERY_SEPARATOR)
 
-	query := "https://www.goodreads.com/search?utf8=%E2%9C%93&q=" + bookTitle + "&search_type=books"
+	cacheKey := strings.ToLower(bookTitle + QUERY_SEPARATOR + authorName)
+	cachedUrl, err := cache.GetCache().Get(cacheKey)
+	if err != nil {
+		log.Print(err)
+	}
+	if cachedUrl != nil {
+		log.Printf("Found cache with key %s", cacheKey)
+		w.Write(BuildSuccessResponse(w, string(cachedUrl.Value)))
+		return
+	}
 
+	query := "https://www.goodreads.com/search?utf8=%E2%9C%93&q=" + bookTitle + "&search_type=books"
 	body, err := getBody(query)
 	if err != nil {
 		w.Write(BuildErrorResponse(w, HttpException{
@@ -71,8 +83,7 @@ func BookcoverSearch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	imageUrl, err := GetUrlForQuerySearch(body, bookTitle, authorName)
-	log.Print(imageUrl)
+	imageUrl, err := GetUrlForQuerySearch(body, bookTitle, authorName, cacheKey)
 	if err != nil {
 		w.Write(BuildErrorResponse(w, HttpException{
 			statusCode: http.StatusInternalServerError,
@@ -141,7 +152,7 @@ func GetUrlForISBNSearch(data []byte) (string, error) {
 	return imageUrl, nil
 }
 
-func GetUrlForQuerySearch(data []byte, bookTitle string, authorName string) (string, error) {
+func GetUrlForQuerySearch(data []byte, bookTitle string, authorName string, cacheKey string) (string, error) {
 	doc, err := parseHTML(data)
 	if err != nil {
 		return "", err
@@ -163,6 +174,11 @@ func GetUrlForQuerySearch(data []byte, bookTitle string, authorName string) (str
 		return url, fmt.Errorf("Image was not found")
 	}
 	imageUrl := regexp.MustCompile(`_[^_]*_.`).ReplaceAllString(url, "") // Remove small image indicator to retrieve bigger cover image
+	if cache.GetCache() != nil {
+		cache.GetCache().Set(&memcache.Item{Key: cacheKey, Value: []byte(imageUrl)})
+		log.Printf("Created cache for key %s", cacheKey)
+
+	}
 	return imageUrl, nil
 }
 
