@@ -9,8 +9,9 @@ func TestGetUrlForQuerySearch(t *testing.T) {
 	data := []byte("<html></html>")
 	authorName := "Author Name"
 	bookTitle := "Book Title"
+	key := "book+title+author+name"
 
-	url, _ := routes.GetUrlForQuerySearch(data, bookTitle, authorName)
+	url, _ := routes.GetUrlForQuerySearch(data, bookTitle, authorName, key)
 
 	expectedUrl := ""
 	if url != expectedUrl {
