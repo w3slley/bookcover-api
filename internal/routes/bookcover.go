@@ -98,6 +98,7 @@ func BookcoverSearch(w http.ResponseWriter, r *http.Request) {
 func BookcoverByIsbn(w http.ResponseWriter, r *http.Request) {
 	isbn := strings.ReplaceAll(r.PathValue("isbn"), "-", "")
 	if len(isbn) != 13 {
+		log.Printf("Invalid ISBN %s", isbn)
 		w.Write(BuildErrorResponse(w, HttpException{statusCode: http.StatusBadRequest, message: helpers.INVALID_ISBN}))
 		return
 	}
@@ -112,7 +113,7 @@ func BookcoverByIsbn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	imageUrl, err := GetUrlForISBNSearch(body)
+	imageUrl, err := GetUrlForISBNSearch(body, isbn)
 	if err != nil {
 		w.Write(BuildErrorResponse(w, HttpException{
 			statusCode: http.StatusInternalServerError,
@@ -138,7 +139,7 @@ func getBody(url string) ([]byte, error) {
 	return body, nil
 }
 
-func GetUrlForISBNSearch(data []byte) (string, error) {
+func GetUrlForISBNSearch(data []byte, isbn string) (string, error) {
 	html := string(data)
 	reader := strings.NewReader(html)
 	doc, err := goquery.NewDocumentFromReader(reader)
@@ -147,7 +148,7 @@ func GetUrlForISBNSearch(data []byte) (string, error) {
 	}
 	imageUrl, exists := doc.Find(".BookCover__image").First().Find("img").First().Attr("src")
 	if !exists {
-		return "", fmt.Errorf("Image was not found")
+		return "", fmt.Errorf("Image was not found for ISBN %s")
 	}
 	return imageUrl, nil
 }
@@ -171,7 +172,7 @@ func GetUrlForQuerySearch(data []byte, bookTitle string, authorName string, cach
 		}
 	})
 	if url == "" {
-		return url, fmt.Errorf("Image was not found")
+		return url, fmt.Errorf("Image was not found [%s, %s]", bookTitle, authorName)
 	}
 	imageUrl := regexp.MustCompile(`_[^_]*_.`).ReplaceAllString(url, "") // Remove small image indicator to retrieve bigger cover image
 	if cache.GetCache() != nil {
