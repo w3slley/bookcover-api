@@ -163,16 +163,16 @@ func GetUrlForQuerySearch(data []byte, bookTitle string, authorName string, cach
 	doc.Find("tr[itemscope]").Each(func(i int, s *goquery.Selection) {
 		foundUrl, urlExists := s.Find(".bookCover").First().Attr("src")
 
-		authorNameFormatted := strings.ReplaceAll(authorName, QUERY_SEPARATOR, " ")
-		foundAuthorName := strings.ReplaceAll(s.Find(".authorName").First().Text(), QUERY_SEPARATOR, " ")
+		foundAuthorName := strings.Join(strings.Fields(s.Find(".authorName").First().Text()), " ")
+		foundAuthorName = strings.ReplaceAll(foundAuthorName, " ", QUERY_SEPARATOR)
 		if url == "" &&
 			urlExists &&
-			strings.ToLower(foundAuthorName) == strings.ToLower(authorNameFormatted) {
+			strings.ToLower(foundAuthorName) == strings.ToLower(authorName) {
 			url = foundUrl
 		}
 	})
 	if url == "" {
-		return url, fmt.Errorf("Image was not found [%s, %s]", bookTitle, authorName)
+		return url, fmt.Errorf("Image was not found [book_title=%s, author_name=%s]", bookTitle, authorName)
 	}
 	imageUrl := regexp.MustCompile(`_[^_]*_.`).ReplaceAllString(url, "") // Remove small image indicator to retrieve bigger cover image
 	if cache.GetCache() != nil {
