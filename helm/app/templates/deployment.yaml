@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.appName }}-deployment
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ .Values.appName }}
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: {{ .Values.appName }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.appName }}
+    spec:
+      serviceAccountName: {{ .Values.appName }}-service-account
+      containers:
+        - name: {{ .Values.appName }}
+          image: harbor.infra.longitood.com/bookcover-api/bookcover-api:{{ .Values.image.tag }}
+          env:
+          - name: MEMCACHED_HOST
+            value: "memcached"
+          ports:
+            - name: http
+              containerPort: {{ .Values.port }}
+              protocol: TCP
+      imagePullSecrets:
+        - name: harbor
