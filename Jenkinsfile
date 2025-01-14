@@ -34,7 +34,7 @@ pipeline {
       }
       steps {
         script {
-            docker.withRegistry("${DOCKER_REGISTRY}", 'harbor-registry-credentials') {
+            docker.withRegistry("${DOCKER_REGISTRY}", 'harbor-jenkins-credentials') {
               def customImage = docker.build("bookcover-api/bookcover-api:${env.BRANCH_NAME.replace("/","-")}")
               customImage.push()
             }
