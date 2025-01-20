@@ -1,0 +1,2 @@
+appName: memcached
+containerPort: 11211
