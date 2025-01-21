@@ -10,6 +10,7 @@ spec:
   commonName: {{ .Values.appName }}.apps.k8s.longitood.com
   dnsNames:
     - {{ .Values.appName }}.apps.k8s.longitood.com
+    - bookcover.longitood.com
   issuerRef:
     name: {{ .Values.appName }}-letsencrypt
     kind: ClusterIssuer

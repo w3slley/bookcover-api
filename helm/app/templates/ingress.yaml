@@ -18,7 +18,18 @@ spec:
                   number: {{ .Values.port }}
             path: /
             pathType: Prefix
+    - host: bookcover.longitood.com
+      http:
+        paths:
+          - backend:
+              service:
+                name: {{ .Values.appName }}-service
+                port:
+                  number: {{ .Values.port }}
+            path: /
+            pathType: Prefix
   tls:
     - hosts:
         - {{ .Values.appName }}.apps.k8s.longitood.com
+        - bookcover.longitood.com
       secretName: tls-{{ .Values.appName }}
