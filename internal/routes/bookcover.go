@@ -86,7 +86,7 @@ func BookcoverSearch(w http.ResponseWriter, r *http.Request) {
 	imageUrl, err := GetUrlForQuerySearch(body, bookTitle, authorName, cacheKey)
 	if err != nil {
 		w.Write(BuildErrorResponse(w, HttpException{
-			statusCode: http.StatusInternalServerError,
+			statusCode: http.StatusNotFound,
 			message:    err.Error(),
 		}))
 		return
