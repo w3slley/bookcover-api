@@ -19,6 +19,7 @@ spec:
       containers:
         - name: {{ .Values.appName }}
           image: harbor.infra.longitood.com/bookcover-api/bookcover-api:{{ .Values.image.tag }}
+          imagePullPolicy: Always
           env:
           - name: MEMCACHED_HOST
             value: "memcached"
