@@ -15,3 +15,7 @@ func GetCache() *memcache.Client {
 	cache = memcache.New(os.Getenv("MEMCACHED_HOST") + ":11211")
 	return cache
 }
+
+func SetCache(c *memcache.Client) {
+	cache = c
+}

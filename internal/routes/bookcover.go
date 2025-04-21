@@ -96,10 +96,25 @@ func BookcoverSearch(w http.ResponseWriter, r *http.Request) {
 }
 
 func BookcoverByIsbn(w http.ResponseWriter, r *http.Request) {
-	isbn := strings.ReplaceAll(r.PathValue("isbn"), "-", "")
+	// Extract ISBN from URL path
+	path := r.URL.Path
+	isbn := strings.TrimPrefix(path, "/bookcover/")
+	isbn = strings.ReplaceAll(isbn, "-", "")
+	
 	if len(isbn) != 13 {
 		log.Printf("Invalid ISBN %s", isbn)
 		w.Write(BuildErrorResponse(w, HttpException{statusCode: http.StatusBadRequest, message: helpers.INVALID_ISBN}))
+		return
+	}
+
+	cacheKey := strings.ToLower(isbn)
+	cachedUrl, err := cache.GetCache().Get(cacheKey)
+	if err != nil {
+		log.Print(err)
+	}
+	if cachedUrl != nil {
+		log.Printf("Found cache with key %s", cacheKey)
+		w.Write(BuildSuccessResponse(w, string(cachedUrl.Value)))
 		return
 	}
 
@@ -120,6 +135,11 @@ func BookcoverByIsbn(w http.ResponseWriter, r *http.Request) {
 			message:    err.Error(),
 		}))
 		return
+	}
+
+	if cache.GetCache() != nil {
+		cache.GetCache().Set(&memcache.Item{Key: cacheKey, Value: []byte(imageUrl)})
+		log.Printf("Created cache for key %s", cacheKey)
 	}
 
 	w.Write(BuildSuccessResponse(w, imageUrl))
@@ -148,7 +168,7 @@ func GetUrlForISBNSearch(data []byte, isbn string) (string, error) {
 	}
 	imageUrl, exists := doc.Find(".BookCover__image").First().Find("img").First().Attr("src")
 	if !exists {
-		return "", fmt.Errorf("Image was not found for ISBN %s")
+		return "", fmt.Errorf("Image was not found for ISBN %s", isbn)
 	}
 	return imageUrl, nil
 }
