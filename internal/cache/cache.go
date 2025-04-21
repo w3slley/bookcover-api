@@ -6,12 +6,22 @@ import (
 	"github.com/bradfitz/gomemcache/memcache"
 )
 
-var cache *memcache.Client
+// CacheClient interface defines the methods we need from memcache.Client
+type CacheClient interface {
+	Get(key string) (*memcache.Item, error)
+	Set(item *memcache.Item) error
+}
 
-func GetCache() *memcache.Client {
+var cache CacheClient
+
+func GetCache() CacheClient {
 	if cache != nil {
 		return cache
 	}
 	cache = memcache.New(os.Getenv("MEMCACHED_HOST") + ":11211")
 	return cache
+}
+
+func SetCache(c CacheClient) {
+	cache = c
 }
