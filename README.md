@@ -1,6 +1,6 @@
 # An API to retrieve bookcovers from the internet.
 
-This is a simple API that fetches book cover images from Goodreads. You can search for covers using either a book's title and author, or its ISBN number. It returns a direct URL to the cover image that you can use in your applications.
+This is a simple API that fetches book cover images from Goodreads. You can search for covers using either a book's title and author, or its ISBN number, or Goodreads's own book ID. It returns a direct URL to the cover image that you can use in your applications.
 
 ## Documentation
 
@@ -40,9 +40,25 @@ curl -X GET "https://bookcover.longitood.com/bookcover/978-0345376596"
 }
 ```
 
+### GET /bookcover/id/:bookId
+
+Search for a book cover using its Goodreads book ID number.
+
+**Example Request:**
+```bash
+curl -X GET "https://bookcover.longitood.com/bookcover/61663"
+```
+
+**Example Response:**
+```json
+{
+  "url": "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1500191671i/61663.jpg"
+}
+```
+
 ## How It Works
 
-The API fetches book cover images from Goodreads using two different approaches:
+The API fetches book cover images from Goodreads using three different approaches:
 
 1. **Search by Title and Author**
    - Takes the book title and author name as input
@@ -52,6 +68,12 @@ The API fetches book cover images from Goodreads using two different approaches:
 
 2. **Search by ISBN-13**
    - Accepts a 13-digit ISBN number
+   - Performs a direct lookup on Goodreads
+   - Returns the book cover URL
+   - Also caches successful results
+
+3. **Search by Book ID**
+   - Accepts a numerical book ID
    - Performs a direct lookup on Goodreads
    - Returns the book cover URL
    - Also caches successful results
