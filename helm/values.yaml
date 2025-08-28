@@ -1,0 +1,11 @@
+name: bookcover-api
+namespace: bookcover-api
+email: wes@longitood.com
+memcached:
+  name: memcached
+  containerPort: 11211
+api:
+  port: 8000
+  image:
+    tag: main
+
