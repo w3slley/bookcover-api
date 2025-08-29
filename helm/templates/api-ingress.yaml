@@ -1,21 +1,21 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ .Values.appName }}-ingress
+  name: {{ .Values.name }}-ingress
   namespace: {{ .Values.namespace }}
   annotations:
-    cert-manager.io/cluster-issuer: {{ .Values.appName }}-letsencrypt
+    cert-manager.io/cluster-issuer: {{ .Values.name }}-letsencrypt
 spec:
   ingressClassName: traefik
   rules:
-    - host: {{ .Values.appName }}.apps.k8s.longitood.com
+    - host: {{ .Values.name }}.apps.k8s.longitood.com
       http:
         paths:
           - backend:
               service:
-                name: {{ .Values.appName }}-service
+                name: {{ .Values.name }}-service
                 port:
-                  number: {{ .Values.port }}
+                  number: {{ .Values.api.port }}
             path: /
             pathType: Prefix
     - host: bookcover.longitood.com
@@ -23,13 +23,13 @@ spec:
         paths:
           - backend:
               service:
-                name: {{ .Values.appName }}-service
+                name: {{ .Values.name }}-service
                 port:
-                  number: {{ .Values.port }}
+                  number: {{ .Values.api.port }}
             path: /
             pathType: Prefix
   tls:
     - hosts:
-        - {{ .Values.appName }}.apps.k8s.longitood.com
+        - {{ .Values.name }}.apps.k8s.longitood.com
         - bookcover.longitood.com
-      secretName: tls-{{ .Values.appName }}
+      secretName: tls-{{ .Values.name }}

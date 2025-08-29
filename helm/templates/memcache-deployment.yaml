@@ -1,26 +1,26 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Values.appName }}
+  name: {{ .Values.memcached.name }}
   labels:
-    app: {{ .Values.appName }}
+    app: {{ .Values.memcached.name }}
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: {{ .Values.appName }}
+      app: {{ .Values.memcached.name }}
   template:
     metadata:
       labels:
-        app: {{ .Values.appName }}
+        app: {{ .Values.memcached.name }}
     spec:
       containers:
-        - name: {{ .Values.appName }}
+        - name: {{ .Values.memcached.name }}
           image: memcached:latest
           args:
             - "--memory-limit=1024"
           ports:
-            - containerPort: {{ .Values.containerPort }}
+            - containerPort: {{ .Values.memcached.containerPort }}
           resources:
             limits:
               memory: "1024Mi"
