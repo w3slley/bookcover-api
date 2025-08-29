@@ -45,30 +45,22 @@ pipeline {
       }
     }
 
-    stage('Deploy to k8s cluster') {
+    stage('Deploy to ArgoCD') {
       when {
         anyOf {
           branch "main"
         }
       }
-      agent {
-        docker {
-          image "${HARBOR_REGISTRY}/${HELM_KUBECTL_BASE_IMAGE}"
-            args "-v /var/jenkins_home/.kube/config:/var/jenkins_home/.kube/config"
-            registryUrl "https://${HARBOR_REGISTRY}"
-            registryCredentialsId "$HARBOR_CREDENTIALS_ID"
-        }
-      }
-
-      environment {
-        KUBECONFIG = "/var/jenkins_home/.kube/config"
-      }
       steps {
-        // Deploy app 
-        sh 'helm upgrade --install bookcover-api ./helm/app -f ./helm/values-common.yaml -f ./helm/app/values.yaml -n bookcover-api'
-
-        // Deploy memcached
-        sh 'helm upgrade --install bookcover-api-memcached ./helm/memcached -f ./helm/memcached/values.yaml -n bookcover-api'
+        withCredentials([string(credentialsId: 'argocd-token', variable: 'ARGOCD_TOKEN')]) {
+          sh '''
+            curl -X POST \
+            https://argocd.infra.longitood.com/api/v1/applications/bookcover-api/sync \
+            -H "Authorization: Bearer $ARGOCD_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{"strategy":{"hook":{"force":true}}}'
+            '''
+        }
       }
     }
   }
