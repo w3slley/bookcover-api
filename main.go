@@ -32,6 +32,13 @@ func main() {
 		middlewares.CorsHeaderMiddleware(),
 	))
 
+	http.HandleFunc("/bookcover/id/{isbn}", middlewares.Chain(
+		routes.BookcoverByBookId,
+		middlewares.HttpMethod("GET"),
+		middlewares.JsonHeaderMiddleware(),
+		middlewares.CorsHeaderMiddleware(),
+	))
+
 	http.HandleFunc("/bookcover/{isbn}", middlewares.Chain(
 		routes.BookcoverByIsbn,
 		middlewares.HttpMethod("GET"),

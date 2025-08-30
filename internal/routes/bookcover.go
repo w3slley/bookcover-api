@@ -100,7 +100,7 @@ func BookcoverByIsbn(w http.ResponseWriter, r *http.Request) {
 	path := r.URL.Path
 	isbn := strings.TrimPrefix(path, "/bookcover/")
 	isbn = strings.ReplaceAll(isbn, "-", "")
-	
+
 	if len(isbn) != 13 {
 		log.Printf("Invalid ISBN %s", isbn)
 		w.Write(BuildErrorResponse(w, HttpException{statusCode: http.StatusBadRequest, message: helpers.INVALID_ISBN}))
@@ -145,6 +145,49 @@ func BookcoverByIsbn(w http.ResponseWriter, r *http.Request) {
 	w.Write(BuildSuccessResponse(w, imageUrl))
 }
 
+func BookcoverByBookId(w http.ResponseWriter, r *http.Request) {
+	// Extract book ID from URL path
+	path := r.URL.Path
+	bookid := strings.TrimPrefix(path, "/bookcover/id/")
+
+	cacheKey := "id-" + strings.ToLower(bookid)
+	cachedUrl, err := cache.GetCache().Get(cacheKey)
+	if err != nil {
+		log.Print(err)
+	}
+	if cachedUrl != nil {
+		log.Printf("Found cache with key %s", cacheKey)
+		w.Write(BuildSuccessResponse(w, string(cachedUrl.Value)))
+		return
+	}
+
+	query := "https://www.goodreads.com/book/show/" + bookid
+	body, err := getBody(query)
+	if err != nil {
+		w.Write(BuildErrorResponse(w, HttpException{
+			statusCode: http.StatusBadRequest,
+			message:    err.Error(),
+		}))
+		return
+	}
+
+	imageUrl, err := GetUrlForBookIdSearch(body, bookid)
+	if err != nil {
+		w.Write(BuildErrorResponse(w, HttpException{
+			statusCode: http.StatusNotFound,
+			message:    err.Error(),
+		}))
+		return
+	}
+
+	if cache.GetCache() != nil {
+		cache.GetCache().Set(&memcache.Item{Key: cacheKey, Value: []byte(imageUrl)})
+		log.Printf("Created cache for key %s", cacheKey)
+	}
+
+	w.Write(BuildSuccessResponse(w, imageUrl))
+}
+
 func getBody(url string) ([]byte, error) {
 	response, err := http.Get(url)
 	if err != nil {
@@ -159,7 +202,7 @@ func getBody(url string) ([]byte, error) {
 	return body, nil
 }
 
-func GetUrlForISBNSearch(data []byte, isbn string) (string, error) {
+func getUrlFromSingleBookPage(data []byte, notFoundError error) (string, error) {
 	html := string(data)
 	reader := strings.NewReader(html)
 	doc, err := goquery.NewDocumentFromReader(reader)
@@ -168,9 +211,17 @@ func GetUrlForISBNSearch(data []byte, isbn string) (string, error) {
 	}
 	imageUrl, exists := doc.Find(".BookCover__image").First().Find("img").First().Attr("src")
 	if !exists {
-		return "", fmt.Errorf("Image was not found for ISBN %s", isbn)
+		return "", notFoundError
 	}
 	return imageUrl, nil
+}
+
+func GetUrlForISBNSearch(data []byte, isbn string) (string, error) {
+	return getUrlFromSingleBookPage(data, fmt.Errorf("Image was not found for ISBN %s", isbn))
+}
+
+func GetUrlForBookIdSearch(data []byte, bookId string) (string, error) {
+	return getUrlFromSingleBookPage(data, fmt.Errorf("Image was not found for book ID %s", bookId))
 }
 
 func GetUrlForQuerySearch(data []byte, bookTitle string, authorName string, cacheKey string) (string, error) {
