@@ -5,8 +5,8 @@ metadata:
   namespace: {{ .Values.namespace }}
 spec:
   secretName: tls-{{ .Values.name }}
-  duration: 2160h
-  renewBefore: 12h
+  duration: 2160h0m0s
+  renewBefore: 12h0m0s
   commonName: {{ .Values.name }}.apps.k8s.longitood.com
   dnsNames:
     - {{ .Values.name }}.apps.k8s.longitood.com
