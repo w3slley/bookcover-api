@@ -1,4 +1,6 @@
 .env
 .air*
 tmp/
+bin/*
+.claude/
 
