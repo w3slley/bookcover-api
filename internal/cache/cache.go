@@ -6,7 +6,6 @@ import (
 	"github.com/bradfitz/gomemcache/memcache"
 )
 
-// CacheClient interface defines the methods we need from memcache.Client
 type CacheClient interface {
 	Get(key string) (*memcache.Item, error)
 	Set(item *memcache.Item) error

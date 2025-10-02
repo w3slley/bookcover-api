@@ -1,6 +1,10 @@
-package cache
+package mocks
 
-import "github.com/bradfitz/gomemcache/memcache"
+import (
+	"bookcover-api/internal/cache"
+
+	"github.com/bradfitz/gomemcache/memcache"
+)
 
 // MockMemcacheClient implements CacheClient interface for testing
 type MockMemcacheClient struct {
@@ -8,7 +12,7 @@ type MockMemcacheClient struct {
 }
 
 // NewMockCache creates a new mock cache instance for testing
-func NewMockCache() CacheClient {
+func NewMockCache() cache.CacheClient {
 	return &MockMemcacheClient{
 		items: make(map[string]*memcache.Item),
 	}

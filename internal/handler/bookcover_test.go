@@ -1,45 +1,47 @@
-package tests
+package handler
 
 import (
-	"bookcover-api/internal/cache"
-	"bookcover-api/internal/helpers"
-	"bookcover-api/internal/routes"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
+	"bookcover-api/internal/cache"
+	"bookcover-api/internal/config"
+	"bookcover-api/internal/scraper"
+	"bookcover-api/internal/service"
+	"bookcover-api/mocks"
+
 	"github.com/bradfitz/gomemcache/memcache"
 )
 
 var (
 	isbn        = "978-0345376597"
-	expectedUrl = "https://example.com/book.jpg"
+	expectedURL = "https://example.com/book.jpg"
 )
 
-func setupTestCache() {
-	cache.SetCache(cache.NewMockCache())
-}
-
-func cleanupTestCache() {
-	cache.SetCache(nil)
+func setupTestHandler() (*BookcoverHandler, cache.CacheClient) {
+	mockCache := mocks.NewMockCache()
+	goodreadsScraper := scraper.NewGoodreads()
+	bookcoverService := service.NewBookcoverService(goodreadsScraper, mockCache)
+	handler := NewBookcoverHandler(bookcoverService)
+	return handler, mockCache
 }
 
 func TestBookcoverSearch_CacheHit(t *testing.T) {
-	setupTestCache()
-	defer cleanupTestCache()
+	handler, mockCache := setupTestHandler()
 
 	// Setup test data
 	cacheKey := "test+book+test+author"
-	cache.GetCache().Set(&memcache.Item{Key: cacheKey, Value: []byte(expectedUrl)})
+	mockCache.Set(&memcache.Item{Key: cacheKey, Value: []byte(expectedURL)})
 
 	// Create request
 	req := httptest.NewRequest("GET", "/bookcover?book_title=test+book&author_name=test+author", nil)
 	w := httptest.NewRecorder()
 
 	// Call handler
-	routes.BookcoverSearch(w, req)
+	handler.Search(w, req)
 
 	// Check response
 	resp := w.Result()
@@ -49,25 +51,24 @@ func TestBookcoverSearch_CacheHit(t *testing.T) {
 
 	var response map[string]string
 	json.NewDecoder(resp.Body).Decode(&response)
-	if response["url"] != expectedUrl {
-		t.Errorf("Expected URL %s, got %s", expectedUrl, response["url"])
+	if response["url"] != expectedURL {
+		t.Errorf("Expected URL %s, got %s", expectedURL, response["url"])
 	}
 }
 
-func TestBookcoverByIsbn_CacheHit(t *testing.T) {
-	setupTestCache()
-	defer cleanupTestCache()
+func TestBookcoverByISBN_CacheHit(t *testing.T) {
+	handler, mockCache := setupTestHandler()
 
 	// Setup test data
 	cacheKey := strings.ReplaceAll(isbn, "-", "")
-	cache.GetCache().Set(&memcache.Item{Key: cacheKey, Value: []byte(expectedUrl)})
+	mockCache.Set(&memcache.Item{Key: cacheKey, Value: []byte(expectedURL)})
 
 	// Create request
 	req := httptest.NewRequest("GET", "/bookcover/"+isbn, nil)
 	w := httptest.NewRecorder()
 
 	// Call handler
-	routes.BookcoverByIsbn(w, req)
+	handler.ByISBN(w, req)
 
 	// Check response
 	resp := w.Result()
@@ -77,21 +78,20 @@ func TestBookcoverByIsbn_CacheHit(t *testing.T) {
 
 	var response map[string]string
 	json.NewDecoder(resp.Body).Decode(&response)
-	if response["url"] != expectedUrl {
-		t.Errorf("Expected URL %s, got %s", expectedUrl, response["url"])
+	if response["url"] != expectedURL {
+		t.Errorf("Expected URL %s, got %s", expectedURL, response["url"])
 	}
 }
 
 func TestBookcoverSearch_CacheMiss(t *testing.T) {
-	setupTestCache()
-	defer cleanupTestCache()
+	handler, _ := setupTestHandler()
 
 	// Create request
 	req := httptest.NewRequest("GET", "/bookcover?book_title=test+book&author_name=test+author+different", nil)
 	w := httptest.NewRecorder()
 
 	// Call handler
-	routes.BookcoverSearch(w, req)
+	handler.Search(w, req)
 
 	// Check response
 	resp := w.Result()
@@ -100,16 +100,15 @@ func TestBookcoverSearch_CacheMiss(t *testing.T) {
 	}
 }
 
-func TestBookcoverByIsbn_CacheMiss(t *testing.T) {
-	setupTestCache()
-	defer cleanupTestCache()
+func TestBookcoverByISBN_CacheMiss(t *testing.T) {
+	handler, _ := setupTestHandler()
 
 	// Create request
 	req := httptest.NewRequest("GET", "/bookcover/978-0000000000", nil)
 	w := httptest.NewRecorder()
 
 	// Call handler
-	routes.BookcoverByIsbn(w, req)
+	handler.ByISBN(w, req)
 
 	// Check response
 	resp := w.Result()
@@ -124,15 +123,14 @@ func TestBookcoverByIsbn_CacheMiss(t *testing.T) {
 }
 
 func TestBookcoverSearch_InvalidParams(t *testing.T) {
-	setupTestCache()
-	defer cleanupTestCache()
+	handler, _ := setupTestHandler()
 
 	// Create request with missing parameters
 	req := httptest.NewRequest("GET", "/bookcover", nil)
 	w := httptest.NewRecorder()
 
 	// Call handler
-	routes.BookcoverSearch(w, req)
+	handler.Search(w, req)
 
 	// Check response
 	resp := w.Result()
@@ -142,21 +140,20 @@ func TestBookcoverSearch_InvalidParams(t *testing.T) {
 
 	var response map[string]string
 	json.NewDecoder(resp.Body).Decode(&response)
-	if response["error"] != helpers.MANDATORY_PARAMS_MISSING {
-		t.Errorf("Expected error message %s, got %s", helpers.MANDATORY_PARAMS_MISSING, response["error"])
+	if response["error"] != config.MandidatoryParamsMissing {
+		t.Errorf("Expected error message %s, got %s", config.MandidatoryParamsMissing, response["error"])
 	}
 }
 
-func TestBookcoverByIsbn_InvalidISBN(t *testing.T) {
-	setupTestCache()
-	defer cleanupTestCache()
+func TestBookcoverByISBN_InvalidISBN(t *testing.T) {
+	handler, _ := setupTestHandler()
 
 	// Create request with invalid ISBN
 	req := httptest.NewRequest("GET", "/bookcover/123", nil)
 	w := httptest.NewRecorder()
 
 	// Call handler
-	routes.BookcoverByIsbn(w, req)
+	handler.ByISBN(w, req)
 
 	// Check response
 	resp := w.Result()
@@ -166,7 +163,7 @@ func TestBookcoverByIsbn_InvalidISBN(t *testing.T) {
 
 	var response map[string]string
 	json.NewDecoder(resp.Body).Decode(&response)
-	if response["error"] != helpers.INVALID_ISBN {
-		t.Errorf("Expected error message %s, got %s", helpers.INVALID_ISBN, response["error"])
+	if response["error"] != config.InvalidISBN {
+		t.Errorf("Expected error message %s, got %s", config.InvalidISBN, response["error"])
 	}
 }
