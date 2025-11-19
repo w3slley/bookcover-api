@@ -1,3 +1,35 @@
+
+<div align="right">
+  <details>
+    <summary >🌐 Language</summary>
+    <div>
+      <div align="center">
+        <a href="https://openaitx.github.io/view.html?user=w3slley&project=bookcover-api&lang=en">English</a>
+        | <a href="https://openaitx.github.io/view.html?user=w3slley&project=bookcover-api&lang=zh-CN">简体中文</a>
+        | <a href="https://openaitx.github.io/view.html?user=w3slley&project=bookcover-api&lang=zh-TW">繁體中文</a>
+        | <a href="https://openaitx.github.io/view.html?user=w3slley&project=bookcover-api&lang=ja">日本語</a>
+        | <a href="https://openaitx.github.io/view.html?user=w3slley&project=bookcover-api&lang=ko">한국어</a>
+        | <a href="https://openaitx.github.io/view.html?user=w3slley&project=bookcover-api&lang=hi">हिन्दी</a>
+        | <a href="https://openaitx.github.io/view.html?user=w3slley&project=bookcover-api&lang=th">ไทย</a>
+        | <a href="https://openaitx.github.io/view.html?user=w3slley&project=bookcover-api&lang=fr">Français</a>
+        | <a href="https://openaitx.github.io/view.html?user=w3slley&project=bookcover-api&lang=de">Deutsch</a>
+        | <a href="https://openaitx.github.io/view.html?user=w3slley&project=bookcover-api&lang=es">Español</a>
+        | <a href="https://openaitx.github.io/view.html?user=w3slley&project=bookcover-api&lang=it">Italiano</a>
+        | <a href="https://openaitx.github.io/view.html?user=w3slley&project=bookcover-api&lang=ru">Русский</a>
+        | <a href="https://openaitx.github.io/view.html?user=w3slley&project=bookcover-api&lang=pt">Português</a>
+        | <a href="https://openaitx.github.io/view.html?user=w3slley&project=bookcover-api&lang=nl">Nederlands</a>
+        | <a href="https://openaitx.github.io/view.html?user=w3slley&project=bookcover-api&lang=pl">Polski</a>
+        | <a href="https://openaitx.github.io/view.html?user=w3slley&project=bookcover-api&lang=ar">العربية</a>
+        | <a href="https://openaitx.github.io/view.html?user=w3slley&project=bookcover-api&lang=fa">فارسی</a>
+        | <a href="https://openaitx.github.io/view.html?user=w3slley&project=bookcover-api&lang=tr">Türkçe</a>
+        | <a href="https://openaitx.github.io/view.html?user=w3slley&project=bookcover-api&lang=vi">Tiếng Việt</a>
+        | <a href="https://openaitx.github.io/view.html?user=w3slley&project=bookcover-api&lang=id">Bahasa Indonesia</a>
+        | <a href="https://openaitx.github.io/view.html?user=w3slley&project=bookcover-api&lang=as">অসমীয়া</
+      </div>
+    </div>
+  </details>
+</div>
+
 # An API to retrieve bookcovers from the internet.
 
 This is a simple API that fetches book cover images from Goodreads. You can search for covers using either a book's title and author, or its ISBN number. It returns a direct URL to the cover image that you can use in your applications.
