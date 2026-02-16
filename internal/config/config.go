@@ -7,4 +7,5 @@ const (
 	ErrorReadingBody       = "An error occurred while reading body of the request."
 	InternalServerError    = "Internal server error. Please, try again later."
 	MandidatoryParamsMissing = "There are mandatory parameters missing."
+	ConflictingParams        = "Cannot combine isbn with book_title/author_name parameters."
 )

@@ -12,6 +12,7 @@ import (
 const (
 	bookTitleParam  = "book_title"
 	authorNameParam = "author_name"
+	isbnParam       = "isbn"
 )
 
 type BookcoverHandler struct {
@@ -25,8 +26,19 @@ func NewBookcoverHandler(svc service.BookcoverService) *BookcoverHandler {
 }
 
 func (h *BookcoverHandler) Search(w http.ResponseWriter, r *http.Request) {
+	isbn := r.URL.Query().Get(isbnParam)
 	bookTitle := r.URL.Query().Get(bookTitleParam)
 	authorName := r.URL.Query().Get(authorNameParam)
+
+	if isbn != "" && (bookTitle != "" || authorName != "") {
+		w.Write(response.Error(w, http.StatusBadRequest, config.ConflictingParams))
+		return
+	}
+
+	if isbn != "" {
+		h.searchByISBN(w, isbn)
+		return
+	}
 
 	if bookTitle == "" || authorName == "" {
 		w.Write(response.Error(w, http.StatusBadRequest, config.MandidatoryParamsMissing))
@@ -34,6 +46,23 @@ func (h *BookcoverHandler) Search(w http.ResponseWriter, r *http.Request) {
 	}
 
 	imageURL, err := h.service.GetByTitleAuthor(bookTitle, authorName)
+	if err != nil {
+		w.Write(response.Error(w, http.StatusNotFound, err.Error()))
+		return
+	}
+
+	w.Write(response.Success(w, imageURL))
+}
+
+func (h *BookcoverHandler) searchByISBN(w http.ResponseWriter, isbn string) {
+	isbn = strings.ReplaceAll(isbn, "-", "")
+
+	if len(isbn) != 13 {
+		w.Write(response.Error(w, http.StatusBadRequest, config.InvalidISBN))
+		return
+	}
+
+	imageURL, err := h.service.GetByISBN(isbn)
 	if err != nil {
 		w.Write(response.Error(w, http.StatusNotFound, err.Error()))
 		return

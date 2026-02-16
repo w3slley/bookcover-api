@@ -24,13 +24,16 @@ curl -X GET "https://bookcover.longitood.com/bookcover?book_title=The+Pale+Blue+
 }
 ```
 
-### GET /bookcover/:isbn
+### GET /bookcover?isbn=<isbn-13>
 
 Search for a book cover using its ISBN-13 number.
 
+**Required Parameters:**
+- `isbn` (string): The ISBN-13 number of the book
+
 **Example Request:**
 ```bash
-curl -X GET "https://bookcover.longitood.com/bookcover/978-0345376596"
+curl -X GET "https://bookcover.longitood.com/bookcover?isbn=978-0345376596"
 ```
 
 **Example Response:**
@@ -38,6 +41,15 @@ curl -X GET "https://bookcover.longitood.com/bookcover/978-0345376596"
 {
   "url": "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1500191671i/61663.jpg"
 }
+```
+
+### GET /bookcover/:isbn (deprecated)
+
+The path-based ISBN lookup is still supported for backwards compatibility.
+
+**Example Request:**
+```bash
+curl -X GET "https://bookcover.longitood.com/bookcover/978-0345376596"
 ```
 
 ## How It Works

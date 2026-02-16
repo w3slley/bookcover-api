@@ -122,6 +122,69 @@ func TestBookcoverByISBN_CacheMiss(t *testing.T) {
 	}
 }
 
+func TestBookcoverSearch_ByISBNQueryParam_CacheHit(t *testing.T) {
+	handler, mockCache := setupTestHandler()
+
+	cacheKey := strings.ReplaceAll(isbn, "-", "")
+	mockCache.Set(&memcache.Item{Key: cacheKey, Value: []byte(expectedURL)})
+
+	req := httptest.NewRequest("GET", "/bookcover?isbn="+isbn, nil)
+	w := httptest.NewRecorder()
+
+	handler.Search(w, req)
+
+	resp := w.Result()
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("Expected status code 200, got %d", resp.StatusCode)
+	}
+
+	var response map[string]string
+	json.NewDecoder(resp.Body).Decode(&response)
+	if response["url"] != expectedURL {
+		t.Errorf("Expected URL %s, got %s", expectedURL, response["url"])
+	}
+}
+
+func TestBookcoverSearch_ByISBNQueryParam_InvalidISBN(t *testing.T) {
+	handler, _ := setupTestHandler()
+
+	req := httptest.NewRequest("GET", "/bookcover?isbn=123", nil)
+	w := httptest.NewRecorder()
+
+	handler.Search(w, req)
+
+	resp := w.Result()
+	if resp.StatusCode != http.StatusBadRequest {
+		t.Errorf("Expected status code 400 for invalid ISBN, got %d", resp.StatusCode)
+	}
+
+	var response map[string]string
+	json.NewDecoder(resp.Body).Decode(&response)
+	if response["error"] != config.InvalidISBN {
+		t.Errorf("Expected error message %s, got %s", config.InvalidISBN, response["error"])
+	}
+}
+
+func TestBookcoverSearch_ConflictingParams(t *testing.T) {
+	handler, _ := setupTestHandler()
+
+	req := httptest.NewRequest("GET", "/bookcover?isbn=978-0345376597&book_title=test", nil)
+	w := httptest.NewRecorder()
+
+	handler.Search(w, req)
+
+	resp := w.Result()
+	if resp.StatusCode != http.StatusBadRequest {
+		t.Errorf("Expected status code 400 for conflicting params, got %d", resp.StatusCode)
+	}
+
+	var response map[string]string
+	json.NewDecoder(resp.Body).Decode(&response)
+	if response["error"] != config.ConflictingParams {
+		t.Errorf("Expected error message %s, got %s", config.ConflictingParams, response["error"])
+	}
+}
+
 func TestBookcoverSearch_InvalidParams(t *testing.T) {
 	handler, _ := setupTestHandler()
 
