@@ -25,7 +25,7 @@ pipeline {
         } 
       }
       steps {
-        sh 'go test ./tests'
+        sh 'make test'
       }
     }
 
