@@ -230,3 +230,63 @@ func TestBookcoverByISBN_InvalidISBN(t *testing.T) {
 		t.Errorf("Expected error message %s, got %s", config.InvalidISBN, response["error"])
 	}
 }
+
+func TestBookcoverSearch_OnlyBookTitle_MissingAuthor(t *testing.T) {
+	handler, _ := setupTestHandler()
+
+	req := httptest.NewRequest("GET", "/bookcover?book_title=test+book", nil)
+	w := httptest.NewRecorder()
+
+	handler.Search(w, req)
+
+	resp := w.Result()
+	if resp.StatusCode != http.StatusBadRequest {
+		t.Errorf("Expected 400 when author_name is missing, got %d", resp.StatusCode)
+	}
+
+	var response map[string]string
+	json.NewDecoder(resp.Body).Decode(&response)
+	if response["error"] != config.MandidatoryParamsMissing {
+		t.Errorf("Expected error %s, got %s", config.MandidatoryParamsMissing, response["error"])
+	}
+}
+
+func TestBookcoverSearch_OnlyAuthorName_MissingBookTitle(t *testing.T) {
+	handler, _ := setupTestHandler()
+
+	req := httptest.NewRequest("GET", "/bookcover?author_name=test+author", nil)
+	w := httptest.NewRecorder()
+
+	handler.Search(w, req)
+
+	resp := w.Result()
+	if resp.StatusCode != http.StatusBadRequest {
+		t.Errorf("Expected 400 when book_title is missing, got %d", resp.StatusCode)
+	}
+
+	var response map[string]string
+	json.NewDecoder(resp.Body).Decode(&response)
+	if response["error"] != config.MandidatoryParamsMissing {
+		t.Errorf("Expected error %s, got %s", config.MandidatoryParamsMissing, response["error"])
+	}
+}
+
+func TestBookcoverSearch_ISBNWithAuthorName_ConflictingParams(t *testing.T) {
+	handler, _ := setupTestHandler()
+
+	req := httptest.NewRequest("GET", "/bookcover?isbn=978-0345376597&author_name=test+author", nil)
+	w := httptest.NewRecorder()
+
+	handler.Search(w, req)
+
+	resp := w.Result()
+	if resp.StatusCode != http.StatusBadRequest {
+		t.Errorf("Expected 400 for isbn+author_name conflict, got %d", resp.StatusCode)
+	}
+
+	var response map[string]string
+	json.NewDecoder(resp.Body).Decode(&response)
+	if response["error"] != config.ConflictingParams {
+		t.Errorf("Expected error %s, got %s", config.ConflictingParams, response["error"])
+	}
+}

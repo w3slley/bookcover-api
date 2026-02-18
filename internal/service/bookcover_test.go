@@ -247,3 +247,106 @@ func TestGetByISBN_NilCache(t *testing.T) {
 		t.Errorf("GetByISBN() = %v, want %v", url, expectedURL)
 	}
 }
+
+// errCache returns a non-ErrCacheMiss error on Get and an error on Set,
+// allowing us to test the error-handling paths in getFromCache / setCache.
+type errCache struct {
+	getErr error
+	setErr error
+}
+
+func (e *errCache) Get(key string) (*memcache.Item, error) {
+	return nil, e.getErr
+}
+
+func (e *errCache) Set(item *memcache.Item) error {
+	return e.setErr
+}
+
+func TestGetByTitleAuthor_CacheGetError_FallsBackToScraper(t *testing.T) {
+	expectedURL := "https://example.com/scraped.jpg"
+
+	ms := &mockScraper{
+		fetchByTitleAuthorFunc: func(bookTitle, authorName string) (string, error) {
+			return expectedURL, nil
+		},
+	}
+
+	svc := NewBookcoverService(ms, &errCache{getErr: errors.New("connection refused")})
+
+	url, err := svc.GetByTitleAuthor("test book", "test author")
+	if err != nil {
+		t.Errorf("GetByTitleAuthor() unexpected error: %v", err)
+	}
+	if url != expectedURL {
+		t.Errorf("GetByTitleAuthor() = %v, want %v", url, expectedURL)
+	}
+}
+
+func TestGetByISBN_CacheGetError_FallsBackToScraper(t *testing.T) {
+	expectedURL := "https://example.com/isbn-scraped.jpg"
+
+	ms := &mockScraper{
+		fetchByISBNFunc: func(isbn string) (string, error) {
+			return expectedURL, nil
+		},
+	}
+
+	svc := NewBookcoverService(ms, &errCache{getErr: errors.New("connection refused")})
+
+	url, err := svc.GetByISBN("978-0345376596")
+	if err != nil {
+		t.Errorf("GetByISBN() unexpected error: %v", err)
+	}
+	if url != expectedURL {
+		t.Errorf("GetByISBN() = %v, want %v", url, expectedURL)
+	}
+}
+
+func TestGetByTitleAuthor_CacheSetError_StillReturnsURL(t *testing.T) {
+	expectedURL := "https://example.com/scraped.jpg"
+
+	ms := &mockScraper{
+		fetchByTitleAuthorFunc: func(bookTitle, authorName string) (string, error) {
+			return expectedURL, nil
+		},
+	}
+
+	// Get succeeds with a miss (nil, ErrCacheMiss would be handled; here we use
+	// an error on Get to skip cache, and an error on Set to exercise that path).
+	svc := NewBookcoverService(ms, &errCache{
+		getErr: errors.New("get error"),
+		setErr: errors.New("set error"),
+	})
+
+	url, err := svc.GetByTitleAuthor("test book", "test author")
+	if err != nil {
+		t.Errorf("GetByTitleAuthor() unexpected error: %v", err)
+	}
+	if url != expectedURL {
+		t.Errorf("GetByTitleAuthor() = %v, want %v", url, expectedURL)
+	}
+}
+
+func TestGetByISBN_CacheSetError_StillReturnsURL(t *testing.T) {
+	expectedURL := "https://example.com/isbn-scraped.jpg"
+
+	ms := &mockScraper{
+		fetchByISBNFunc: func(isbn string) (string, error) {
+			return expectedURL, nil
+		},
+	}
+
+	svc := NewBookcoverService(ms, &errCache{
+		getErr: errors.New("get error"),
+		setErr: errors.New("set error"),
+	})
+
+	url, err := svc.GetByISBN("978-0345376596")
+	if err != nil {
+		t.Errorf("GetByISBN() unexpected error: %v", err)
+	}
+	if url != expectedURL {
+		t.Errorf("GetByISBN() = %v, want %v", url, expectedURL)
+	}
+}
