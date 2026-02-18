@@ -1,6 +1,9 @@
 package scraper
 
 import (
+	"net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
@@ -153,5 +156,52 @@ func TestExtractURLFromSearch_AuthorMismatch(t *testing.T) {
 	_, err := g.extractURLFromSearch(html, "The+Stand", "Carl+Sagan")
 	if err == nil {
 		t.Error("extractURLFromSearch() expected error for author mismatch, got nil")
+	}
+}
+
+func TestFetchHTML_Success(t *testing.T) {
+	expected := "<html><body>hello</body></html>"
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(expected))
+	}))
+	defer srv.Close()
+
+	g := NewGoodreads()
+	body, err := g.fetchHTML(srv.URL)
+	if err != nil {
+		t.Fatalf("fetchHTML() unexpected error: %v", err)
+	}
+	if string(body) != expected {
+		t.Errorf("fetchHTML() body = %q, want %q", string(body), expected)
+	}
+}
+
+func TestFetchHTML_NetworkError(t *testing.T) {
+	g := NewGoodreads()
+	// Use an address that will refuse connections
+	_, err := g.fetchHTML("http://127.0.0.1:1")
+	if err == nil {
+		t.Fatal("fetchHTML() expected error for refused connection, got nil")
+	}
+	if !strings.Contains(err.Error(), "failed to fetch URL") {
+		t.Errorf("fetchHTML() error = %q, want it to contain 'failed to fetch URL'", err.Error())
+	}
+}
+
+func TestFetchHTML_LargeBody(t *testing.T) {
+	payload := strings.Repeat("x", 1024*100) // 100KB
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(payload))
+	}))
+	defer srv.Close()
+
+	g := NewGoodreads()
+	body, err := g.fetchHTML(srv.URL)
+	if err != nil {
+		t.Fatalf("fetchHTML() unexpected error: %v", err)
+	}
+	if len(body) != len(payload) {
+		t.Errorf("fetchHTML() body length = %d, want %d", len(body), len(payload))
 	}
 }
