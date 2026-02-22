@@ -3,9 +3,11 @@ namespace: bookcover-api
 email: wes@longitood.com
 memcached:
   name: memcached
+  replicaCount: 1
   containerPort: 11211
+  memoryLimit: 1024
 api:
+  replicaCount: 2
   port: 8000
   image:
     tag: main
-

@@ -5,7 +5,7 @@ metadata:
   labels:
     app: {{ .Values.memcached.name }}
 spec:
-  replicas: 2
+  replicas: {{ .Values.memcached.replicaCount }}
   selector:
     matchLabels:
       app: {{ .Values.memcached.name }}
@@ -18,9 +18,9 @@ spec:
         - name: {{ .Values.memcached.name }}
           image: memcached:latest
           args:
-            - "--memory-limit=1024"
+            - "--memory-limit={{ .Values.memcached.memoryLimit }}"
           ports:
             - containerPort: {{ .Values.memcached.containerPort }}
           resources:
             limits:
-              memory: "1024Mi"
+              memory: "{{ .Values.memcached.memoryLimit }}Mi"
