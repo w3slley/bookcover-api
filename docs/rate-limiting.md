@@ -2,10 +2,12 @@
 
 ## Overview
 
+> **Note:** Quota-based rate limiting is currently disabled (all users are treated as Pro tier). It will be enforced once the paid access system is in place. Burst protection via Cloudflare is active.
+
 The API enforces two layers of rate limiting to protect against abuse and ensure fair usage:
 
-1. **Burst protection** — Handled by Cloudflare. Returns `429` if more than 5 requests are made within a 10-second window.
-2. **Quota-based limits** — Enforced at the application level per client IP using memcached counters.
+1. **Burst protection** — Handled by Cloudflare. Returns `429` if more than 1 requests per second are made.
+2. **Quota-based limits** — Enforced at the application level per client IP using memcached counters (not yet active).
 
 ## Quota Limits
 
