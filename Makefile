@@ -6,19 +6,19 @@ build:
 
 # Run tests
 test:
-	go test ./internal/handler ./internal/scraper ./internal/service
+	go test ./...
 
 # Run tests with verbose output
 test-verbose:
-	go test -v ./internal/handler ./internal/scraper ./internal/service
+	go test -v ./...
 
 # Run tests with coverage
 test-coverage:
-	go test -cover ./internal/handler ./internal/scraper ./internal/service
+	go test -cover ./...
 
 # Generate detailed coverage report
 test-coverage-html:
-	go test -coverprofile=coverage.out ./internal/handler ./internal/scraper ./internal/service
+	go test -coverprofile=coverage.out ./...
 	go tool cover -html=coverage.out -o coverage.html
 	@echo "Coverage report generated at coverage.html"
 
