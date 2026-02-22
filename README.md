@@ -2,10 +2,6 @@
 
 This is a simple API that fetches book cover images from Goodreads. You can search for covers using either a book's title and author, or its ISBN number. It returns a direct URL to the cover image that you can use in your applications.
 
-## Rate Limiting (Update 22/02/2026)
-
-Due to high API usage (1.35M requests last month 😮), basic rate limiting (throttle and daily/monthly limits) was put in place to keep the servers stable. See the [Rate Limiting docs](https://github.com/w3slley/bookcover-api/blob/main/docs/rate-limiting.md) for more details.
-
 ## Documentation
 
 ### GET /bookcover
