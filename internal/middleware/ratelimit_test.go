@@ -179,3 +179,30 @@ func TestRateLimit_UsesXForwardedFor(t *testing.T) {
 		})
 	}
 }
+
+func TestRateLimit_CounterTTL(t *testing.T) {
+	mc := newMockCache()
+	cfg := RateLimitConfig{DailyLimit: 100, MonthlyLimit: 1000}
+	mw := RateLimitMiddlewareWithConfig(mc, cfg)(okHandler)
+
+	rr := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/bookcover?isbn=978-1637928370", nil)
+	req.RemoteAddr = "10.0.0.1:1234"
+	mw(rr, req)
+
+	dailyItem := mc.items["ratelimit:10.0.0.1:daily"]
+	if dailyItem == nil {
+		t.Fatal("expected daily counter to exist")
+	}
+	if dailyItem.Expiration != dailyTTL {
+		t.Errorf("daily TTL: expected %d, got %d", dailyTTL, dailyItem.Expiration)
+	}
+
+	monthlyItem := mc.items["ratelimit:10.0.0.1:monthly"]
+	if monthlyItem == nil {
+		t.Fatal("expected monthly counter to exist")
+	}
+	if monthlyItem.Expiration != monthlyTTL {
+		t.Errorf("monthly TTL: expected %d, got %d", monthlyTTL, monthlyItem.Expiration)
+	}
+}
