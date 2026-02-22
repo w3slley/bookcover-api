@@ -72,4 +72,10 @@ The API fetches book cover images from Goodreads using two different approaches:
 The API provides clear error messages in JSON format:
 - 400 Bad Request: Missing parameters or invalid ISBN
 - 404 Not Found: No matching book cover found
+- 429 Too Many Requests: Rate limiting quotas were met
 - All responses include appropriate CORS headers
+
+
+## Rate Limiting (Update 22/02/2026)
+
+Due to high API usage (1.35M requests last month 😮), basic rate limiting (throttle and daily/monthly limits) was put in place to keep the servers stable. See the [Rate Limiting docs](https://github.com/w3slley/bookcover-api/blob/main/docs/rate-limiting.md) for more details.
