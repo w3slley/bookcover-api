@@ -22,18 +22,33 @@ const (
 type RateLimitConfig struct {
 	DailyLimit   int
 	MonthlyLimit int
+	Unlimited    bool
 }
 
-func RateLimitMiddleware(cacheClient cache.CacheClient) Middleware {
-	return RateLimitMiddlewareWithConfig(cacheClient, RateLimitConfig{
+var (
+	FreeTier = RateLimitConfig{
 		DailyLimit:   DefaultDailyLimit,
 		MonthlyLimit: DefaultMonthlyLimit,
-	})
+	}
+	ProTier = RateLimitConfig{
+		Unlimited: true,
+	}
+)
+
+func RateLimitMiddleware(cacheClient cache.CacheClient) Middleware {
+	return RateLimitMiddlewareWithConfig(cacheClient, ProTier)
 }
 
 func RateLimitMiddlewareWithConfig(cacheClient cache.CacheClient, cfg RateLimitConfig) Middleware {
 	return func(f http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
+			activeCfg := cfg
+
+			if activeCfg.Unlimited {
+				f(w, r)
+				return
+			}
+
 			ip := getClientIP(r)
 
 			dailyKey := fmt.Sprintf("ratelimit:%s:daily", ip)
@@ -51,12 +66,12 @@ func RateLimitMiddlewareWithConfig(cacheClient cache.CacheClient, cfg RateLimitC
 				return
 			}
 
-			w.Header().Set("X-RateLimit-Limit-Daily", strconv.Itoa(cfg.DailyLimit))
-			w.Header().Set("X-RateLimit-Remaining-Daily", strconv.Itoa(max(0, cfg.DailyLimit-int(dailyCount))))
-			w.Header().Set("X-RateLimit-Limit-Monthly", strconv.Itoa(cfg.MonthlyLimit))
-			w.Header().Set("X-RateLimit-Remaining-Monthly", strconv.Itoa(max(0, cfg.MonthlyLimit-int(monthlyCount))))
+			w.Header().Set("X-RateLimit-Limit-Daily", strconv.Itoa(activeCfg.DailyLimit))
+			w.Header().Set("X-RateLimit-Remaining-Daily", strconv.Itoa(max(0, activeCfg.DailyLimit-int(dailyCount))))
+			w.Header().Set("X-RateLimit-Limit-Monthly", strconv.Itoa(activeCfg.MonthlyLimit))
+			w.Header().Set("X-RateLimit-Remaining-Monthly", strconv.Itoa(max(0, activeCfg.MonthlyLimit-int(monthlyCount))))
 
-			if int(dailyCount) > cfg.DailyLimit || int(monthlyCount) > cfg.MonthlyLimit {
+			if int(dailyCount) > activeCfg.DailyLimit || int(monthlyCount) > activeCfg.MonthlyLimit {
 				w.Write(response.Error(w, http.StatusTooManyRequests, "Rate limit exceeded"))
 				return
 			}
