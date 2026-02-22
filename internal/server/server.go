@@ -40,6 +40,7 @@ func Start() error {
 	http.HandleFunc("/bookcover", middleware.Chain(
 		bookcoverHandler.Search,
 		metrics.MetricsMiddleware(),
+		middleware.RateLimitMiddleware(cacheClient),
 		middleware.HttpMethod("GET"),
 		middleware.JsonHeaderMiddleware(),
 		middleware.CorsHeaderMiddleware(),
@@ -48,6 +49,7 @@ func Start() error {
 	http.HandleFunc("/bookcover/{isbn}", middleware.Chain(
 		bookcoverHandler.ByISBN,
 		metrics.MetricsMiddleware(),
+		middleware.RateLimitMiddleware(cacheClient),
 		middleware.HttpMethod("GET"),
 		middleware.JsonHeaderMiddleware(),
 		middleware.CorsHeaderMiddleware(),

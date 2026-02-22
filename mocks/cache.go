@@ -1,6 +1,8 @@
 package mocks
 
 import (
+	"fmt"
+
 	"bookcover-api/internal/cache"
 
 	"github.com/bradfitz/gomemcache/memcache"
@@ -28,6 +30,28 @@ func (m *MockMemcacheClient) Get(key string) (*memcache.Item, error) {
 func (m *MockMemcacheClient) Set(item *memcache.Item) error {
 	m.items[item.Key] = item
 	return nil
+}
+
+func (m *MockMemcacheClient) Add(item *memcache.Item) error {
+	if _, exists := m.items[item.Key]; exists {
+		return memcache.ErrNotStored
+	}
+	m.items[item.Key] = item
+	return nil
+}
+
+func (m *MockMemcacheClient) Increment(key string, delta uint64) (uint64, error) {
+	item, exists := m.items[key]
+	if !exists {
+		return 0, memcache.ErrCacheMiss
+	}
+	val := uint64(0)
+	for _, b := range item.Value {
+		val = val*10 + uint64(b-'0')
+	}
+	val += delta
+	item.Value = fmt.Appendf(nil, "%d", val)
+	return val, nil
 }
 
 // Reset clears all items from the mock cache

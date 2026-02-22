@@ -263,6 +263,14 @@ func (e *errCache) Set(item *memcache.Item) error {
 	return e.setErr
 }
 
+func (e *errCache) Add(item *memcache.Item) error {
+	return e.setErr
+}
+
+func (e *errCache) Increment(key string, delta uint64) (uint64, error) {
+	return 0, e.getErr
+}
+
 func TestGetByTitleAuthor_CacheGetError_FallsBackToScraper(t *testing.T) {
 	expectedURL := "https://example.com/scraped.jpg"
 
