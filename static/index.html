@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BookCover API — Instant Book Cover Images</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0906;
+      --bg2: #110f0c;
+      --bg3: #1a1714;
+      --surface: #201d19;
+      --border: rgba(255,220,150,0.1);
+      --gold: #e8c97a;
+      --gold-dim: rgba(232,201,122,0.6);
+      --gold-glow: rgba(232,201,122,0.15);
+      --cream: #f5edd6;
+      --muted: rgba(245,237,214,0.45);
+      --code-bg: #141210;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--cream);
+      font-family: 'Libre Baskerville', Georgia, serif;
+      overflow-x: hidden;
+    }
+
+    /* ── NOISE TEXTURE OVERLAY ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 9999; opacity: .5;
+    }
+
+    /* ── GRID LINES ── */
+    .grid-bg {
+      position: fixed; inset: 0; z-index: 0;
+      background-image:
+        linear-gradient(rgba(232,201,122,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(232,201,122,0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      padding: 20px 40px;
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      background: rgba(10,9,6,0.8);
+      backdrop-filter: blur(20px);
+    }
+    .nav-logo {
+      font-family: 'Libre Baskerville', serif;
+      font-size: 1rem;
+      letter-spacing: 0.05em;
+      color: var(--gold);
+      text-decoration: none;
+    }
+    .nav-logo span { color: var(--cream); opacity: 0.6; }
+    .nav-links { display: flex; gap: 32px; align-items: center; }
+    .nav-links a {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-decoration: none;
+      letter-spacing: 0.08em;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--gold); }
+    .nav-cta {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      padding: 8px 20px;
+      border: 1px solid var(--gold);
+      color: var(--gold) !important;
+      border-radius: 2px;
+      transition: background 0.2s, color 0.2s !important;
+    }
+    .nav-cta:hover { background: var(--gold) !important; color: var(--bg) !important; }
+
+    /* ── HERO ── */
+    .hero {
+      position: relative; z-index: 1;
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center;
+      padding: 120px 24px 80px;
+      overflow: hidden;
+    }
+
+    /* Spotlight effect */
+    .hero::after {
+      content: '';
+      position: absolute;
+      top: -200px; left: 50%; transform: translateX(-50%);
+      width: 800px; height: 800px;
+      background: radial-gradient(circle, rgba(232,201,122,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--gold);
+      border: 1px solid rgba(232,201,122,0.3);
+      padding: 6px 16px;
+      border-radius: 100px;
+      margin-bottom: 40px;
+      background: rgba(232,201,122,0.05);
+      animation: fadeUp 0.8s ease both;
+    }
+    .hero-badge .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--gold);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.8); }
+    }
+
+    .hero h1 {
+      font-size: clamp(2.8rem, 7vw, 6rem);
+      font-weight: 700;
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      margin-bottom: 24px;
+      animation: fadeUp 0.8s 0.1s ease both;
+    }
+    .hero h1 em {
+      font-style: italic;
+      color: var(--gold);
+    }
+
+    .hero-sub {
+      font-size: clamp(1rem, 2vw, 1.2rem);
+      color: var(--muted);
+      max-width: 520px;
+      line-height: 1.7;
+      margin-bottom: 48px;
+      font-weight: 400;
+      animation: fadeUp 0.8s 0.2s ease both;
+    }
+
+    .hero-actions {
+      display: flex; gap: 16px; flex-wrap: wrap; justify-content: center;
+      animation: fadeUp 0.8s 0.3s ease both;
+    }
+
+    .btn-primary {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      padding: 14px 32px;
+      background: var(--gold);
+      color: var(--bg);
+      border: none;
+      border-radius: 2px;
+      cursor: pointer;
+      text-decoration: none;
+      letter-spacing: 0.05em;
+      font-weight: 500;
+      transition: opacity 0.2s, transform 0.2s;
+    }
+    .btn-primary:hover { opacity: 0.88; transform: translateY(-1px); }
+
+    .btn-ghost {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      padding: 14px 32px;
+      background: transparent;
+      color: var(--cream);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      cursor: pointer;
+      text-decoration: none;
+      letter-spacing: 0.05em;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .btn-ghost:hover { border-color: var(--gold-dim); color: var(--gold); }
+
+    /* Stats strip */
+    .stats-strip {
+      position: relative; z-index: 1;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      display: flex; justify-content: center;
+      background: var(--bg2);
+      overflow: hidden;
+    }
+    .stats-inner {
+      display: flex;
+      width: 100%; max-width: 900px;
+      divide: 1px;
+    }
+    .stat-item {
+      flex: 1;
+      padding: 32px 24px;
+      text-align: center;
+      border-right: 1px solid var(--border);
+      position: relative;
+    }
+    .stat-item:last-child { border-right: none; }
+    .stat-num {
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      font-weight: 700;
+      color: var(--gold);
+      letter-spacing: -0.02em;
+      display: block;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+    .stat-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    /* ── SCROLLING MARQUEE ── */
+    .marquee-section {
+      position: relative; z-index: 1;
+      padding: 20px 0;
+      overflow: hidden;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+    .marquee-track {
+      display: flex;
+      gap: 40px;
+      animation: marquee 25s linear infinite;
+      white-space: nowrap;
+      width: max-content;
+    }
+    .marquee-item {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .marquee-item .sep { color: var(--gold); opacity: 0.5; }
+    @keyframes marquee {
+      from { transform: translateX(0); }
+      to { transform: translateX(-50%); }
+    }
+
+    /* ── SECTION WRAPPER ── */
+    section {
+      position: relative; z-index: 1;
+      padding: 100px 24px;
+    }
+    .section-inner { max-width: 960px; margin: 0 auto; }
+
+    .section-eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 16px;
+    }
+    .section-title {
+      font-size: clamp(1.8rem, 4vw, 3rem);
+      font-weight: 700;
+      line-height: 1.15;
+      margin-bottom: 20px;
+    }
+    .section-title em { font-style: italic; color: var(--gold); }
+    .section-desc {
+      color: var(--muted);
+      font-size: 1.05rem;
+      line-height: 1.75;
+      max-width: 560px;
+      margin-bottom: 60px;
+    }
+
+    /* ── CODE DEMO — Aceternity-style glowing card ── */
+    .demo-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    @media (max-width: 720px) { .demo-grid { grid-template-columns: 1fr; } }
+
+    .demo-pane {
+      background: var(--code-bg);
+      padding: 0;
+      overflow: hidden;
+      position: relative;
+    }
+    .demo-pane::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(circle at top left, rgba(232,201,122,0.05), transparent 60%);
+      pointer-events: none;
+    }
+    .demo-tab {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      padding: 12px 20px;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+      letter-spacing: 0.05em;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .demo-tab .active-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--gold);
+    }
+    .demo-code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      line-height: 1.8;
+      padding: 24px 20px;
+      color: #c9b99a;
+      white-space: pre;
+      overflow-x: auto;
+    }
+    .t-comment { color: #5a5040; }
+    .t-key { color: #e8c97a; }
+    .t-str { color: #a8d8a8; }
+    .t-url { color: #7ab8e8; text-decoration: underline; }
+    .t-num { color: #e8a87a; }
+    .t-method { color: #d4a8e8; }
+
+    /* Response pane */
+    .response-badge {
+      display: inline-block;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      padding: 2px 8px;
+      background: rgba(100,200,100,0.15);
+      color: #7ec87e;
+      border-radius: 2px;
+      letter-spacing: 0.05em;
+    }
+
+    /* ── FEATURE CARDS — MagicUI bento grid ── */
+    .bento {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: auto auto;
+      gap: 12px;
+    }
+    @media (max-width: 860px) { .bento { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 540px) { .bento { grid-template-columns: 1fr; } }
+
+    .bento-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 32px 28px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.3s, transform 0.3s;
+    }
+    .bento-card:hover {
+      border-color: rgba(232,201,122,0.3);
+      transform: translateY(-2px);
+    }
+    .bento-card::before {
+      content: '';
+      position: absolute; inset: 0;
+      opacity: 0;
+      background: radial-gradient(circle at var(--mx,50%) var(--my,50%), rgba(232,201,122,0.07), transparent 60%);
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+    .bento-card:hover::before { opacity: 1; }
+
+    .bento-card.span2 { grid-column: span 2; }
+    .bento-icon {
+      font-size: 1.5rem;
+      margin-bottom: 16px;
+      display: block;
+    }
+    .bento-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: var(--cream);
+    }
+    .bento-desc {
+      font-size: 0.9rem;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    /* inline code pill */
+    .pill {
+      display: inline-block;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      padding: 3px 10px;
+      background: rgba(232,201,122,0.08);
+      border: 1px solid rgba(232,201,122,0.2);
+      border-radius: 2px;
+      color: var(--gold);
+      margin: 2px 0;
+    }
+
+    /* ── ENDPOINT SECTION ── */
+    .endpoint-list { display: flex; flex-direction: column; gap: 16px; }
+
+    .endpoint-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+    .endpoint-card:hover { border-color: rgba(232,201,122,0.25); }
+
+    .endpoint-header {
+      display: flex; align-items: center; gap: 16px;
+      padding: 20px 24px;
+      cursor: pointer;
+    }
+    .method-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      padding: 4px 10px;
+      border-radius: 2px;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+    }
+    .get { background: rgba(100,180,255,0.12); color: #7ab8e8; border: 1px solid rgba(100,180,255,0.2); }
+    .endpoint-path {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--cream);
+      flex: 1;
+    }
+    .endpoint-desc-text { font-size: 0.88rem; color: var(--muted); }
+    .endpoint-body {
+      padding: 0 24px 20px;
+      border-top: 1px solid var(--border);
+      padding-top: 20px;
+    }
+    .param-table { width: 100%; border-collapse: collapse; }
+    .param-table th {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      padding: 8px 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    .param-table td {
+      font-size: 0.85rem;
+      padding: 12px 12px;
+      border-bottom: 1px solid rgba(255,220,150,0.04);
+      vertical-align: top;
+    }
+    .param-table td:first-child {
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--gold);
+      font-size: 0.8rem;
+    }
+    .required-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.6rem;
+      padding: 2px 6px;
+      background: rgba(255,120,100,0.1);
+      color: #e8927a;
+      border-radius: 2px;
+      border: 1px solid rgba(255,120,100,0.2);
+    }
+
+    /* ── CTA SECTION ── */
+    .cta-section {
+      text-align: center;
+      padding: 120px 24px;
+      position: relative; z-index: 1;
+      overflow: hidden;
+    }
+    .cta-section::before {
+      content: '';
+      position: absolute;
+      top: 50%; left: 50%; transform: translate(-50%,-50%);
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(232,201,122,0.07) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .cta-title {
+      font-size: clamp(2rem, 5vw, 4rem);
+      font-weight: 700;
+      line-height: 1.1;
+      margin-bottom: 24px;
+    }
+    .cta-title em { font-style: italic; color: var(--gold); }
+    .cta-sub {
+      color: var(--muted);
+      font-size: 1.05rem;
+      margin-bottom: 48px;
+      line-height: 1.7;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      position: relative; z-index: 1;
+      border-top: 1px solid var(--border);
+      padding: 40px;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 16px;
+      background: var(--bg);
+    }
+    .footer-left {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+    }
+    .footer-right { display: flex; gap: 24px; }
+    .footer-right a {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--muted);
+      text-decoration: none;
+      letter-spacing: 0.05em;
+      transition: color 0.2s;
+    }
+    .footer-right a:hover { color: var(--gold); }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .reveal.visible { opacity: 1; transform: none; }
+
+    /* ── DIVIDER ── */
+    .ornament {
+      display: flex; align-items: center; gap: 16px;
+      margin: 80px 0 40px;
+    }
+    .ornament-line { flex: 1; height: 1px; background: var(--border); }
+    .ornament-glyph {
+      font-size: 1rem;
+      color: var(--gold);
+      opacity: 0.5;
+    }
+
+    /* Mobile nav */
+    @media (max-width: 600px) {
+      nav { padding: 16px 20px; }
+      .nav-links { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="grid-bg"></div>
+
+  <!-- NAV -->
+  <nav>
+    <a href="#" class="nav-logo">📚 bookcover<span>.api</span></a>
+    <div class="nav-links">
+      <a href="#endpoints">Endpoints</a>
+      <a href="#features">Features</a>
+      <a href="https://github.com/w3slley/bookcover-api" target="_blank">GitHub</a>
+      <a href="https://bookcover.longitood.com" target="_blank" class="nav-cta">Try it →</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-badge">
+      <span class="dot"></span>
+      Live · 1M+ requests last month
+    </div>
+    <h1>Book covers,<br /><em>on demand.</em></h1>
+    <p class="hero-sub">
+      A dead-simple REST API that returns high-quality book cover images from Goodreads — searchable by title, author, or ISBN.
+    </p>
+    <div class="hero-actions">
+      <a href="#endpoints" class="btn-primary">Explore the API</a>
+      <a href="https://github.com/w3slley/bookcover-api" target="_blank" class="btn-ghost">★ Star on GitHub</a>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-strip">
+    <div class="stats-inner">
+      <div class="stat-item reveal">
+        <span class="stat-num">1M+</span>
+        <span class="stat-label">requests / month</span>
+      </div>
+      <div class="stat-item reveal">
+        <span class="stat-num">231</span>
+        <span class="stat-label">GitHub stars</span>
+      </div>
+      <div class="stat-item reveal">
+        <span class="stat-num">2</span>
+        <span class="stat-label">endpoints</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- MARQUEE -->
+  <div class="marquee-section">
+    <div class="marquee-track">
+      <span class="marquee-item">The Pale Blue Dot — Carl Sagan <span class="sep">✦</span></span>
+      <span class="marquee-item">Dune — Frank Herbert <span class="sep">✦</span></span>
+      <span class="marquee-item">Sapiens — Yuval Noah Harari <span class="sep">✦</span></span>
+      <span class="marquee-item">1984 — George Orwell <span class="sep">✦</span></span>
+      <span class="marquee-item">The Great Gatsby — F. Scott Fitzgerald <span class="sep">✦</span></span>
+      <span class="marquee-item">Meditations — Marcus Aurelius <span class="sep">✦</span></span>
+      <span class="marquee-item">Thinking Fast and Slow — Kahneman <span class="sep">✦</span></span>
+      <span class="marquee-item">The Pale Blue Dot — Carl Sagan <span class="sep">✦</span></span>
+      <span class="marquee-item">Dune — Frank Herbert <span class="sep">✦</span></span>
+      <span class="marquee-item">Sapiens — Yuval Noah Harari <span class="sep">✦</span></span>
+      <span class="marquee-item">1984 — George Orwell <span class="sep">✦</span></span>
+      <span class="marquee-item">The Great Gatsby — F. Scott Fitzgerald <span class="sep">✦</span></span>
+      <span class="marquee-item">Meditations — Marcus Aurelius <span class="sep">✦</span></span>
+      <span class="marquee-item">Thinking Fast and Slow — Kahneman <span class="sep">✦</span></span>
+    </div>
+  </div>
+
+  <!-- DEMO SECTION -->
+  <section id="demo">
+    <div class="section-inner">
+      <p class="section-eyebrow reveal">Quick Start</p>
+      <h2 class="section-title reveal">One request.<br /><em>Instant cover.</em></h2>
+      <p class="section-desc reveal">No API key. No auth. Just a GET request and you'll have a cover image URL back in milliseconds.</p>
+
+      <div class="demo-grid reveal">
+        <!-- Request -->
+        <div class="demo-pane">
+          <div class="demo-tab"><span class="active-dot"></span>REQUEST</div>
+          <div class="demo-code"><span class="t-comment"># Search by title + author</span>
+<span class="t-method">curl</span> -X GET \
+  "<span class="t-url">https://bookcover.longitood.com/bookcover</span><span class="t-key">?book_title</span>=Dune\
+  <span class="t-key">&author_name</span>=Frank+Herbert"</div>
+          <div class="demo-tab" style="margin-top:4px"><span class="active-dot"></span>OR BY ISBN</div>
+          <div class="demo-code"><span class="t-comment"># Search by ISBN-13</span>
+<span class="t-method">curl</span> -X GET \
+  "<span class="t-url">https://bookcover.longitood.com/bookcover</span><span class="t-key">?isbn</span>=<span class="t-num">978-0441013593</span>"</div>
+        </div>
+        <!-- Response -->
+        <div class="demo-pane">
+          <div class="demo-tab" style="justify-content:space-between">
+            <span>RESPONSE</span>
+            <span class="response-badge">200 OK</span>
+          </div>
+          <div class="demo-code">{
+  <span class="t-key">"url"</span>: <span class="t-str">"https://i.gr-assets.com/
+    images/S/compressed.photo.
+    goodreads.com/books/
+    1555447414i/44767458.jpg"</span>
+}</div>
+          <div class="demo-tab" style="margin-top:4px; justify-content:space-between">
+            <span>NOT FOUND</span>
+            <span style="font-family:JetBrains Mono,monospace;font-size:0.65rem;color:#e8927a;">404</span>
+          </div>
+          <div class="demo-code">{
+  <span class="t-key">"message"</span>: <span class="t-str">"book not found"</span>
+}</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section id="features" style="background: var(--bg2); border-top:1px solid var(--border); border-bottom:1px solid var(--border);">
+    <div class="section-inner">
+      <p class="section-eyebrow reveal">Features</p>
+      <h2 class="section-title reveal">Everything you need,<br /><em>nothing you don't.</em></h2>
+
+      <div class="bento">
+        <div class="bento-card reveal">
+          <span class="bento-icon">🔍</span>
+          <div class="bento-title">Dual search modes</div>
+          <div class="bento-desc">Find covers by book title + author name, or directly by ISBN-13. Both approaches resolve to Goodreads' high-res images.</div>
+        </div>
+        <div class="bento-card reveal">
+          <span class="bento-icon">⚡</span>
+          <div class="bento-title">Cached results</div>
+          <div class="bento-desc">Successful lookups are cached so repeat queries return instantly without hitting upstream sources again.</div>
+        </div>
+        <div class="bento-card reveal">
+          <span class="bento-icon">🔓</span>
+          <div class="bento-title">No auth required</div>
+          <div class="bento-desc">Zero API keys, zero sign-ups. Send a GET request and receive a cover URL. That's the entire integration.</div>
+        </div>
+        <div class="bento-card span2 reveal">
+          <span class="bento-icon">🌐</span>
+          <div class="bento-title">CORS-ready for browsers</div>
+          <div class="bento-desc">All responses include appropriate CORS headers, meaning you can call the API directly from frontend JavaScript without a proxy. Build reading lists, book apps, or library tools without setting up a backend.</div>
+        </div>
+        <div class="bento-card reveal">
+          <span class="bento-icon">📦</span>
+          <div class="bento-title">Self-hostable</div>
+          <div class="bento-desc">Written in Go. Docker-ready. Deploy on your own infra with <span class="pill">docker-compose up</span>.</div>
+        </div>
+        <div class="bento-card reveal">
+          <span class="bento-icon">🛡️</span>
+          <div class="bento-title">Rate limited</div>
+          <div class="bento-desc">Fair-use throttling keeps the public instance healthy for everyone. Response <span class="pill">429</span> when quota is met.</div>
+        </div>
+        <div class="bento-card reveal">
+          <span class="bento-icon">🔗</span>
+          <div class="bento-title">Clean JSON responses</div>
+          <div class="bento-desc">Just a <span class="pill">url</span> field on success. Human-readable <span class="pill">message</span> on error. No bloat.</div>
+        </div>
+        <div class="bento-card reveal">
+          <span class="bento-icon">📖</span>
+          <div class="bento-title">MIT Licensed</div>
+          <div class="bento-desc">Fully open source. Fork it, extend it, or just inspect how it works. 231 stars and growing.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ENDPOINTS -->
+  <section id="endpoints">
+    <div class="section-inner">
+      <p class="section-eyebrow reveal">Reference</p>
+      <h2 class="section-title reveal"><em>API</em> endpoints</h2>
+      <p class="section-desc reveal">The full public API surface. Base URL: <span class="pill">https://bookcover.longitood.com</span></p>
+
+      <div class="endpoint-list">
+        <!-- Endpoint 1 -->
+        <div class="endpoint-card reveal">
+          <div class="endpoint-header">
+            <span class="method-badge get">GET</span>
+            <span class="endpoint-path">/bookcover?book_title=&author_name=</span>
+            <span class="endpoint-desc-text">Search by title & author</span>
+          </div>
+          <div class="endpoint-body">
+            <table class="param-table">
+              <thead>
+                <tr>
+                  <th>Parameter</th>
+                  <th>Type</th>
+                  <th>Required</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>book_title</td>
+                  <td><span class="pill">string</span></td>
+                  <td><span class="required-badge">required</span></td>
+                  <td style="color:var(--muted)">The title of the book to search for</td>
+                </tr>
+                <tr>
+                  <td>author_name</td>
+                  <td><span class="pill">string</span></td>
+                  <td><span class="required-badge">required</span></td>
+                  <td style="color:var(--muted)">The name of the book's author</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Endpoint 2 -->
+        <div class="endpoint-card reveal">
+          <div class="endpoint-header">
+            <span class="method-badge get">GET</span>
+            <span class="endpoint-path">/bookcover?isbn={isbn13}</span>
+            <span class="endpoint-desc-text">Search by ISBN-13</span>
+          </div>
+          <div class="endpoint-body">
+            <table class="param-table">
+              <thead>
+                <tr>
+                  <th>Parameter</th>
+                  <th>Type</th>
+                  <th>Required</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>isbn</td>
+                  <td><span class="pill">string</span></td>
+                  <td><span class="required-badge">required</span></td>
+                  <td style="color:var(--muted)">ISBN-13 number, e.g. <span class="pill">978-0345376596</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Endpoint 3 - deprecated -->
+        <div class="endpoint-card reveal" style="opacity:0.65">
+          <div class="endpoint-header">
+            <span class="method-badge get">GET</span>
+            <span class="endpoint-path">/bookcover/:isbn</span>
+            <span class="endpoint-desc-text" style="color:#e8927a;">deprecated — use query param</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="ornament">
+        <div class="ornament-line"></div>
+        <span class="ornament-glyph">✦</span>
+        <div class="ornament-line"></div>
+      </div>
+
+      <!-- Error codes -->
+      <p class="section-eyebrow">HTTP Status Codes</p>
+      <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(200px,1fr)); gap:12px; margin-top:24px;">
+        <div class="bento-card reveal" style="padding:20px">
+          <span style="font-family:JetBrains Mono,monospace;font-size:1.3rem;color:#7ab8e8;display:block;margin-bottom:8px;">200</span>
+          <div class="bento-desc">Cover URL found and returned</div>
+        </div>
+        <div class="bento-card reveal" style="padding:20px">
+          <span style="font-family:JetBrains Mono,monospace;font-size:1.3rem;color:#e8c97a;display:block;margin-bottom:8px;">400</span>
+          <div class="bento-desc">Missing params or invalid ISBN</div>
+        </div>
+        <div class="bento-card reveal" style="padding:20px">
+          <span style="font-family:JetBrains Mono,monospace;font-size:1.3rem;color:#e8927a;display:block;margin-bottom:8px;">404</span>
+          <div class="bento-desc">No matching cover found</div>
+        </div>
+        <div class="bento-card reveal" style="padding:20px">
+          <span style="font-family:JetBrains Mono,monospace;font-size:1.3rem;color:#d4a8e8;display:block;margin-bottom:8px;">429</span>
+          <div class="bento-desc">Rate limit quota exceeded</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <div class="cta-section">
+    <h2 class="cta-title reveal">Start fetching covers<br /><em>right now.</em></h2>
+    <p class="cta-sub reveal">No setup. No keys. No waiting.<br />The API is live and ready for your next project.</p>
+    <div class="hero-actions reveal">
+      <a href="https://bookcover.longitood.com/bookcover?book_title=Dune&author_name=Frank+Herbert" target="_blank" class="btn-primary">Try a live request →</a>
+      <a href="https://github.com/w3slley/bookcover-api" target="_blank" class="btn-ghost">View source on GitHub</a>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-left">
+      © 2026 bookcover-api · MIT License · Built by <a href="https://github.com/w3slley" target="_blank" style="color:var(--gold);text-decoration:none">w3slley</a>
+    </div>
+    <div class="footer-right">
+      <a href="https://github.com/w3slley/bookcover-api" target="_blank">GitHub</a>
+      <a href="https://bookcover.longitood.com" target="_blank">Live API</a>
+      <a href="https://github.com/w3slley/bookcover-api/blob/main/docs/rate-limiting.md" target="_blank">Rate Limits</a>
+      <a href="https://github.com/w3slley/bookcover-api/issues" target="_blank">Issues</a>
+    </div>
+  </footer>
+
+  <script>
+    // Scroll reveal
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((e, i) => {
+        if (e.isIntersecting) {
+          e.target.style.transitionDelay = (i * 0.05) + 's';
+          e.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+    // Mouse glow on bento cards
+    document.querySelectorAll('.bento-card').forEach(card => {
+      card.addEventListener('mousemove', e => {
+        const rect = card.getBoundingClientRect();
+        const x = ((e.clientX - rect.left) / rect.width * 100).toFixed(1);
+        const y = ((e.clientY - rect.top) / rect.height * 100).toFixed(1);
+        card.style.setProperty('--mx', x + '%');
+        card.style.setProperty('--my', y + '%');
+      });
+    });
+
+    // Counter animation
+    function animateCounter(el, target, suffix = '') {
+      const duration = 1800;
+      const start = performance.now();
+      const isFloat = target.toString().includes('.');
+      const update = (now) => {
+        const t = Math.min((now - start) / duration, 1);
+        const ease = 1 - Math.pow(1 - t, 3);
+        const val = isFloat ? (ease * target).toFixed(2) : Math.floor(ease * target);
+        el.textContent = val + suffix;
+        if (t < 1) requestAnimationFrame(update);
+      };
+      requestAnimationFrame(update);
+    }
+
+    const statObserver = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          const nums = e.target.querySelectorAll('.stat-num');
+          nums.forEach(n => {
+            const raw = n.textContent;
+            if (raw.includes('M')) animateCounter(n, 1.35, 'M');
+            else if (!isNaN(raw)) animateCounter(n, parseInt(raw));
+          });
+          statObserver.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.5 });
+
+    document.querySelector('.stats-strip') && statObserver.observe(document.querySelector('.stats-strip'));
+  </script>
+</body>
+</html>

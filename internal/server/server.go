@@ -33,7 +33,6 @@ func Start() error {
 	http.HandleFunc("/", middleware.Chain(
 		handler.Home,
 		metrics.MetricsMiddleware(),
-		middleware.JsonHeaderMiddleware(),
 		middleware.CorsHeaderMiddleware(),
 	))
 
