@@ -6,49 +6,35 @@ This is a simple API that fetches book cover images from Goodreads. You can sear
 
 ### GET /bookcover
 
-Search for a book cover using the book title and author name.
+Search for a book cover by title/author or by ISBN-13.
 
-**Required Parameters:**
-- `book_title` (string): The title of the book
-- `author_name` (string): The name of the book's author
+**Query Parameters:**
 
-**Optional Parameters:**
-- `image_size` (string): Size of the cover image. Options: `small`, `medium`, `large` (default)
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `book_title` | string | Yes* | The title of the book |
+| `author_name` | string | Yes* | The name of the book's author |
+| `isbn` | string | Yes* | The ISBN-13 number of the book |
+| `image_size` | string | No | Size of the cover image: `small`, `medium`, `large` (default) |
 
-**Example Request:**
+\* Provide either `book_title` + `author_name`, or `isbn`.
+
+**Example Requests:**
 ```bash
+# Search by title and author
 curl -X GET "https://bookcover.longitood.com/bookcover?book_title=The+Pale+Blue+Dot&author_name=Carl+Sagan"
 
-# With image size
+# Search by title and author with image size
 curl -X GET "https://bookcover.longitood.com/bookcover?book_title=The+Pale+Blue+Dot&author_name=Carl+Sagan&image_size=small"
-```
 
-**Example Response:**
-```json
-{
-  "url": "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1388620656i/55030.jpg"
-}
-```
-
-### GET /bookcover?isbn=<isbn-13>
-
-Search for a book cover using its ISBN-13 number.
-
-**Required Parameters:**
-- `isbn` (string): The ISBN-13 number of the book
-
-**Optional Parameters:**
-- `image_size` (string): Size of the cover image. Options: `small`, `medium`, `large` (default)
-
-**Example Request:**
-```bash
+# Search by ISBN
 curl -X GET "https://bookcover.longitood.com/bookcover?isbn=978-0345376596"
 ```
 
 **Example Response:**
 ```json
 {
-  "url": "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1500191671i/61663.jpg"
+  "url": "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1388620656i/55030.jpg"
 }
 ```
 

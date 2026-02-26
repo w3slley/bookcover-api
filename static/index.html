@@ -752,8 +752,8 @@
         <div class="endpoint-card reveal">
           <div class="endpoint-header">
             <span class="method-badge get">GET</span>
-            <span class="endpoint-path">/bookcover?book_title=&author_name=</span>
-            <span class="endpoint-desc-text">Search by title & author</span>
+            <span class="endpoint-path">/bookcover</span>
+            <span class="endpoint-desc-text">Search by title & author or by ISBN-13</span>
           </div>
           <div class="endpoint-body">
             <table class="param-table">
@@ -769,48 +769,19 @@
                 <tr>
                   <td>book_title</td>
                   <td><span class="pill">string</span></td>
-                  <td><span class="required-badge">required</span></td>
+                  <td><span class="required-badge">required *</span></td>
                   <td style="color:var(--muted)">The title of the book to search for</td>
                 </tr>
                 <tr>
                   <td>author_name</td>
                   <td><span class="pill">string</span></td>
-                  <td><span class="required-badge">required</span></td>
+                  <td><span class="required-badge">required *</span></td>
                   <td style="color:var(--muted)">The name of the book's author</td>
                 </tr>
                 <tr>
-                  <td>image_size</td>
-                  <td><span class="pill">string</span></td>
-                  <td><span class="pill" style="font-size:0.65rem;">optional</span></td>
-                  <td style="color:var(--muted)">Cover image size: <span class="pill">small</span>, <span class="pill">medium</span>, or <span class="pill">large</span> (default)</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- Endpoint 2 -->
-        <div class="endpoint-card reveal">
-          <div class="endpoint-header">
-            <span class="method-badge get">GET</span>
-            <span class="endpoint-path">/bookcover?isbn={isbn13}</span>
-            <span class="endpoint-desc-text">Search by ISBN-13</span>
-          </div>
-          <div class="endpoint-body">
-            <table class="param-table">
-              <thead>
-                <tr>
-                  <th>Parameter</th>
-                  <th>Type</th>
-                  <th>Required</th>
-                  <th>Description</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
                   <td>isbn</td>
                   <td><span class="pill">string</span></td>
-                  <td><span class="required-badge">required</span></td>
+                  <td><span class="required-badge">required *</span></td>
                   <td style="color:var(--muted)">ISBN-13 number, e.g. <span class="pill">978-0345376596</span></td>
                 </tr>
                 <tr>
@@ -821,6 +792,7 @@
                 </tr>
               </tbody>
             </table>
+            <p style="font-size:0.78rem;color:var(--muted);margin-top:12px;font-family:'JetBrains Mono',monospace;">* Provide either <span class="pill">book_title</span> + <span class="pill">author_name</span>, or <span class="pill">isbn</span>.</p>
           </div>
         </div>
 
