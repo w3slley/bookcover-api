@@ -12,9 +12,15 @@ Search for a book cover using the book title and author name.
 - `book_title` (string): The title of the book
 - `author_name` (string): The name of the book's author
 
+**Optional Parameters:**
+- `image_size` (string): Size of the cover image. Options: `small`, `medium`, `large` (default)
+
 **Example Request:**
 ```bash
 curl -X GET "https://bookcover.longitood.com/bookcover?book_title=The+Pale+Blue+Dot&author_name=Carl+Sagan"
+
+# With image size
+curl -X GET "https://bookcover.longitood.com/bookcover?book_title=The+Pale+Blue+Dot&author_name=Carl+Sagan&image_size=small"
 ```
 
 **Example Response:**
@@ -30,6 +36,9 @@ Search for a book cover using its ISBN-13 number.
 
 **Required Parameters:**
 - `isbn` (string): The ISBN-13 number of the book
+
+**Optional Parameters:**
+- `image_size` (string): Size of the cover image. Options: `small`, `medium`, `large` (default)
 
 **Example Request:**
 ```bash

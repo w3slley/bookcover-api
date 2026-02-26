@@ -60,7 +60,7 @@ func TestGetByTitleAuthor_CacheHit(t *testing.T) {
 
 	service := NewBookcoverService(mockScraper, mockCache)
 
-	url, err := service.GetByTitleAuthor("test book", "test author")
+	url, err := service.GetByTitleAuthor("test book", "test author", "")
 	if err != nil {
 		t.Errorf("GetByTitleAuthor() error = %v", err)
 	}
@@ -85,7 +85,7 @@ func TestGetByTitleAuthor_CacheMiss_ScraperSuccess(t *testing.T) {
 	mockCache := mocks.NewMockCache()
 	service := NewBookcoverService(mockScraper, mockCache)
 
-	url, err := service.GetByTitleAuthor("test book", "test author")
+	url, err := service.GetByTitleAuthor("test book", "test author", "")
 	if err != nil {
 		t.Errorf("GetByTitleAuthor() error = %v", err)
 	}
@@ -114,7 +114,7 @@ func TestGetByTitleAuthor_ScraperError(t *testing.T) {
 	mockCache := mocks.NewMockCache()
 	service := NewBookcoverService(mockScraper, mockCache)
 
-	_, err := service.GetByTitleAuthor("test book", "test author")
+	_, err := service.GetByTitleAuthor("test book", "test author", "")
 	if err == nil {
 		t.Error("GetByTitleAuthor() expected error, got nil")
 	}
@@ -141,7 +141,7 @@ func TestGetByISBN_CacheHit(t *testing.T) {
 
 	service := NewBookcoverService(mockScraper, mockCache)
 
-	url, err := service.GetByISBN("978-0345376596")
+	url, err := service.GetByISBN("978-0345376596", "")
 	if err != nil {
 		t.Errorf("GetByISBN() error = %v", err)
 	}
@@ -166,7 +166,7 @@ func TestGetByISBN_CacheMiss_ScraperSuccess(t *testing.T) {
 	mockCache := mocks.NewMockCache()
 	service := NewBookcoverService(mockScraper, mockCache)
 
-	url, err := service.GetByISBN("978-0345376596")
+	url, err := service.GetByISBN("978-0345376596", "")
 	if err != nil {
 		t.Errorf("GetByISBN() error = %v", err)
 	}
@@ -196,7 +196,7 @@ func TestGetByISBN_ScraperError(t *testing.T) {
 	mockCache := mocks.NewMockCache()
 	service := NewBookcoverService(mockScraper, mockCache)
 
-	_, err := service.GetByISBN("978-0000000000")
+	_, err := service.GetByISBN("978-0000000000", "")
 	if err == nil {
 		t.Error("GetByISBN() expected error, got nil")
 	}
@@ -217,7 +217,7 @@ func TestGetByTitleAuthor_NilCache(t *testing.T) {
 
 	service := NewBookcoverService(mockScraper, nil)
 
-	url, err := service.GetByTitleAuthor("test book", "test author")
+	url, err := service.GetByTitleAuthor("test book", "test author", "")
 	if err != nil {
 		t.Errorf("GetByTitleAuthor() with nil cache error = %v", err)
 	}
@@ -238,7 +238,7 @@ func TestGetByISBN_NilCache(t *testing.T) {
 
 	service := NewBookcoverService(mockScraper, nil)
 
-	url, err := service.GetByISBN("978-0345376596")
+	url, err := service.GetByISBN("978-0345376596", "")
 	if err != nil {
 		t.Errorf("GetByISBN() with nil cache error = %v", err)
 	}
@@ -282,7 +282,7 @@ func TestGetByTitleAuthor_CacheGetError_FallsBackToScraper(t *testing.T) {
 
 	svc := NewBookcoverService(ms, &errCache{getErr: errors.New("connection refused")})
 
-	url, err := svc.GetByTitleAuthor("test book", "test author")
+	url, err := svc.GetByTitleAuthor("test book", "test author", "")
 	if err != nil {
 		t.Errorf("GetByTitleAuthor() unexpected error: %v", err)
 	}
@@ -302,7 +302,7 @@ func TestGetByISBN_CacheGetError_FallsBackToScraper(t *testing.T) {
 
 	svc := NewBookcoverService(ms, &errCache{getErr: errors.New("connection refused")})
 
-	url, err := svc.GetByISBN("978-0345376596")
+	url, err := svc.GetByISBN("978-0345376596", "")
 	if err != nil {
 		t.Errorf("GetByISBN() unexpected error: %v", err)
 	}
@@ -327,7 +327,7 @@ func TestGetByTitleAuthor_CacheSetError_StillReturnsURL(t *testing.T) {
 		setErr: errors.New("set error"),
 	})
 
-	url, err := svc.GetByTitleAuthor("test book", "test author")
+	url, err := svc.GetByTitleAuthor("test book", "test author", "")
 	if err != nil {
 		t.Errorf("GetByTitleAuthor() unexpected error: %v", err)
 	}
@@ -350,11 +350,140 @@ func TestGetByISBN_CacheSetError_StillReturnsURL(t *testing.T) {
 		setErr: errors.New("set error"),
 	})
 
-	url, err := svc.GetByISBN("978-0345376596")
+	url, err := svc.GetByISBN("978-0345376596", "")
 	if err != nil {
 		t.Errorf("GetByISBN() unexpected error: %v", err)
 	}
 	if url != expectedURL {
 		t.Errorf("GetByISBN() = %v, want %v", url, expectedURL)
+	}
+}
+
+func TestApplyImageSize(t *testing.T) {
+	baseURL := "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1555447414i/44767458.jpg"
+
+	tests := []struct {
+		name      string
+		imageSize string
+		expected  string
+	}{
+		{
+			name:      "small image size",
+			imageSize: "small",
+			expected:  "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1555447414i/44767458.__SY75__.jpg",
+		},
+		{
+			name:      "medium image size",
+			imageSize: "medium",
+			expected:  "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1555447414i/44767458.__SY375__.jpg",
+		},
+		{
+			name:      "large image size returns original",
+			imageSize: "large",
+			expected:  baseURL,
+		},
+		{
+			name:      "empty image size returns original",
+			imageSize: "",
+			expected:  baseURL,
+		},
+		{
+			name:      "invalid image size returns original",
+			imageSize: "xlarge",
+			expected:  baseURL,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := applyImageSize(baseURL, tt.imageSize)
+			if result != tt.expected {
+				t.Errorf("applyImageSize(%q, %q) = %q, want %q", baseURL, tt.imageSize, result, tt.expected)
+			}
+		})
+	}
+}
+
+func TestApplyImageSize_PngExtension(t *testing.T) {
+	url := "https://example.com/image.png"
+	result := applyImageSize(url, "small")
+	expected := "https://example.com/image.__SY75__.png"
+	if result != expected {
+		t.Errorf("applyImageSize() = %q, want %q", result, expected)
+	}
+}
+
+func TestGetByTitleAuthor_WithImageSize(t *testing.T) {
+	scraperURL := "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1555447414i/44767458.jpg"
+
+	ms := &mockScraper{
+		fetchByTitleAuthorFunc: func(bookTitle, authorName string) (string, error) {
+			return scraperURL, nil
+		},
+	}
+
+	mockCache := mocks.NewMockCache()
+	svc := NewBookcoverService(ms, mockCache)
+
+	url, err := svc.GetByTitleAuthor("test book", "test author", "small")
+	if err != nil {
+		t.Errorf("GetByTitleAuthor() unexpected error: %v", err)
+	}
+
+	expected := "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1555447414i/44767458.__SY75__.jpg"
+	if url != expected {
+		t.Errorf("GetByTitleAuthor() = %v, want %v", url, expected)
+	}
+}
+
+func TestGetByISBN_WithImageSize(t *testing.T) {
+	scraperURL := "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1555447414i/44767458.jpg"
+
+	ms := &mockScraper{
+		fetchByISBNFunc: func(isbn string) (string, error) {
+			return scraperURL, nil
+		},
+	}
+
+	mockCache := mocks.NewMockCache()
+	svc := NewBookcoverService(ms, mockCache)
+
+	url, err := svc.GetByISBN("978-0345376596", "medium")
+	if err != nil {
+		t.Errorf("GetByISBN() unexpected error: %v", err)
+	}
+
+	expected := "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1555447414i/44767458.__SY375__.jpg"
+	if url != expected {
+		t.Errorf("GetByISBN() = %v, want %v", url, expected)
+	}
+}
+
+func TestGetByTitleAuthor_CacheHit_WithImageSize(t *testing.T) {
+	cachedURL := "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1555447414i/44767458.jpg"
+
+	ms := &mockScraper{
+		fetchByTitleAuthorFunc: func(bookTitle, authorName string) (string, error) {
+			t.Error("Scraper should not be called when cache hit occurs")
+			return "", nil
+		},
+	}
+
+	mockCache := mocks.NewMockCache()
+	mockCache.Set(&memcache.Item{
+		Key:   "test+book+test+author",
+		Value: []byte(cachedURL),
+	})
+
+	svc := NewBookcoverService(ms, mockCache)
+
+	url, err := svc.GetByTitleAuthor("test book", "test author", "small")
+	if err != nil {
+		t.Errorf("GetByTitleAuthor() unexpected error: %v", err)
+	}
+
+	expected := "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1555447414i/44767458.__SY75__.jpg"
+	if url != expected {
+		t.Errorf("GetByTitleAuthor() = %v, want %v", url, expected)
 	}
 }

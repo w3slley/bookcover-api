@@ -24,13 +24,13 @@ func NewBookcoverService(s scraper.Scraper, cache cache.CacheClient) BookcoverSe
 	}
 }
 
-func (s *bookcoverService) GetByTitleAuthor(bookTitle, authorName string) (string, error) {
+func (s *bookcoverService) GetByTitleAuthor(bookTitle, authorName, imageSize string) (string, error) {
 	bookTitle = strings.ReplaceAll(bookTitle, " ", querySeparator)
 	authorName = strings.ReplaceAll(authorName, " ", querySeparator)
 	cacheKey := strings.ToLower(bookTitle + querySeparator + authorName)
 
 	if cachedURL, err := s.getFromCache(cacheKey); cachedURL != "" {
-		return cachedURL, err
+		return applyImageSize(cachedURL, imageSize), err
 	}
 
 	imageURL, err := s.scraper.FetchByTitleAuthor(bookTitle, authorName)
@@ -40,15 +40,15 @@ func (s *bookcoverService) GetByTitleAuthor(bookTitle, authorName string) (strin
 
 	s.setCache(cacheKey, imageURL)
 
-	return imageURL, nil
+	return applyImageSize(imageURL, imageSize), nil
 }
 
-func (s *bookcoverService) GetByISBN(isbn string) (string, error) {
+func (s *bookcoverService) GetByISBN(isbn, imageSize string) (string, error) {
 	isbn = strings.ReplaceAll(isbn, "-", "")
 	cacheKey := strings.ToLower(isbn)
 
 	if cachedURL, err := s.getFromCache(cacheKey); cachedURL != "" {
-		return cachedURL, err
+		return applyImageSize(cachedURL, imageSize), err
 	}
 
 	imageURL, err := s.scraper.FetchByISBN(isbn)
@@ -58,7 +58,26 @@ func (s *bookcoverService) GetByISBN(isbn string) (string, error) {
 
 	s.setCache(cacheKey, imageURL)
 
-	return imageURL, nil
+	return applyImageSize(imageURL, imageSize), nil
+}
+
+func applyImageSize(url, imageSize string) string {
+	switch imageSize {
+	case "small":
+		return insertSizeSuffix(url, "__SY75__")
+	case "medium":
+		return insertSizeSuffix(url, "__SY375__")
+	default:
+		return url
+	}
+}
+
+func insertSizeSuffix(url, suffix string) string {
+	dotIndex := strings.LastIndex(url, ".")
+	if dotIndex == -1 {
+		return url
+	}
+	return url[:dotIndex] + "." + suffix + url[dotIndex:]
 }
 
 func (s *bookcoverService) getFromCache(key string) (string, error) {

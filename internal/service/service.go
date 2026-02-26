@@ -1,6 +1,6 @@
 package service
 
 type BookcoverService interface {
-	GetByTitleAuthor(bookTitle, authorName string) (string, error)
-	GetByISBN(isbn string) (string, error)
+	GetByTitleAuthor(bookTitle, authorName, imageSize string) (string, error)
+	GetByISBN(isbn, imageSize string) (string, error)
 }

@@ -778,6 +778,12 @@
                   <td><span class="required-badge">required</span></td>
                   <td style="color:var(--muted)">The name of the book's author</td>
                 </tr>
+                <tr>
+                  <td>image_size</td>
+                  <td><span class="pill">string</span></td>
+                  <td><span class="pill" style="font-size:0.65rem;">optional</span></td>
+                  <td style="color:var(--muted)">Cover image size: <span class="pill">small</span>, <span class="pill">medium</span>, or <span class="pill">large</span> (default)</td>
+                </tr>
               </tbody>
             </table>
           </div>
@@ -807,13 +813,55 @@
                   <td><span class="required-badge">required</span></td>
                   <td style="color:var(--muted)">ISBN-13 number, e.g. <span class="pill">978-0345376596</span></td>
                 </tr>
+                <tr>
+                  <td>image_size</td>
+                  <td><span class="pill">string</span></td>
+                  <td><span class="pill" style="font-size:0.65rem;">optional</span></td>
+                  <td style="color:var(--muted)">Cover image size: <span class="pill">small</span>, <span class="pill">medium</span>, or <span class="pill">large</span> (default)</td>
+                </tr>
               </tbody>
             </table>
           </div>
         </div>
 
-        <!-- Endpoint 3 - deprecated -->
-        <div class="endpoint-card reveal" style="opacity:0.65">
+        <!-- Endpoint 3 - bulk -->
+        <div class="endpoint-card reveal" style="opacity:0.55">
+          <div class="endpoint-header">
+            <span class="method-badge get" style="background:rgba(122,184,232,0.12);color:#7ab8e8;border-color:rgba(122,184,232,0.25);">POST</span>
+            <span class="endpoint-path">/bookcover/bulk</span>
+            <span class="endpoint-desc-text">Bulk lookup by ISBN list</span>
+            <span class="pill" style="font-size:0.6rem;margin-left:auto;color:#d4a8e8;border-color:rgba(212,168,232,0.3);">pro · coming soon</span>
+          </div>
+          <div class="endpoint-body">
+            <table class="param-table">
+              <thead>
+                <tr>
+                  <th>Body (JSON)</th>
+                  <th>Type</th>
+                  <th>Required</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>isbns</td>
+                  <td><span class="pill">string[]</span></td>
+                  <td><span class="required-badge">required</span></td>
+                  <td style="color:var(--muted)">Array of ISBN-13 numbers to look up</td>
+                </tr>
+                <tr>
+                  <td>image_size</td>
+                  <td><span class="pill">string</span></td>
+                  <td><span class="pill" style="font-size:0.65rem;">optional</span></td>
+                  <td style="color:var(--muted)">Cover image size: <span class="pill">small</span>, <span class="pill">medium</span>, or <span class="pill">large</span> (default)</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Endpoint 4 - deprecated -->
+        <div class="endpoint-card reveal" style="opacity:0.55">
           <div class="endpoint-header">
             <span class="method-badge get">GET</span>
             <span class="endpoint-path">/bookcover/:isbn</span>
