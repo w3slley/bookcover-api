@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"encoding/json"
 	"net/http"
 	"strings"
 
@@ -91,4 +92,24 @@ func (h *BookcoverHandler) ByISBN(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Write(response.Success(w, imageURL))
+}
+
+func CacheStatsHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		stats := service.GetMetricsStats()
+
+		response := map[string]interface{}{
+			"total_requests":   stats.TotalRequests,
+			"cache_hits":       stats.CacheHits,
+			"cache_misses":     stats.CacheMisses,
+			"new_books_cached": stats.NewBooksCached,
+			"scraping_errors":  stats.ScrapingErrors,
+			"hit_ratio":        stats.HitRatio(),
+			"miss_ratio":       stats.MissRatio(),
+			"new_book_ratio":   stats.NewBookRatio(),
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(response)
+	}
 }

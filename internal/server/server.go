@@ -29,6 +29,12 @@ func Start() error {
 	bookcoverHandler := handler.NewBookcoverHandler(bookcoverService)
 
 	http.Handle("/metrics", promhttp.Handler())
+	http.HandleFunc("/debug/cache-stats", middleware.Chain(
+		handler.CacheStatsHandler(),
+		middleware.AuthMiddleware(),
+		middleware.HttpMethod("GET"),
+		middleware.JsonHeaderMiddleware(),
+	))
 
 	http.HandleFunc("/", middleware.Chain(
 		handler.Home,

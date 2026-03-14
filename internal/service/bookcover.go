@@ -2,9 +2,11 @@ package service
 
 import (
 	"log"
+	"log/slog"
 	"strings"
 
 	"bookcover-api/internal/cache"
+	"bookcover-api/internal/metrics"
 	"bookcover-api/internal/scraper"
 
 	"github.com/bradfitz/gomemcache/memcache"
@@ -15,26 +17,34 @@ const querySeparator = "+"
 type bookcoverService struct {
 	scraper scraper.Scraper
 	cache   cache.CacheClient
+	metrics *metrics.CacheMetrics
 }
 
 func NewBookcoverService(s scraper.Scraper, cache cache.CacheClient) BookcoverService {
 	return &bookcoverService{
 		scraper: s,
 		cache:   cache,
+		metrics: metrics.GetCacheMetrics(),
 	}
 }
 
 func (s *bookcoverService) GetByTitleAuthor(bookTitle, authorName, imageSize string) (string, error) {
+	s.metrics.RecordRequest()
+
 	bookTitle = strings.ReplaceAll(bookTitle, " ", querySeparator)
 	authorName = strings.ReplaceAll(authorName, " ", querySeparator)
 	cacheKey := strings.ToLower(bookTitle + querySeparator + authorName)
 
 	if cachedURL, err := s.getFromCache(cacheKey); cachedURL != "" {
+		s.metrics.RecordCacheHit()
 		return applyImageSize(cachedURL, imageSize), err
 	}
 
+	s.metrics.RecordCacheMiss()
+
 	imageURL, err := s.scraper.FetchByTitleAuthor(bookTitle, authorName)
 	if err != nil {
+		s.metrics.RecordScrapingError()
 		return "", err
 	}
 
@@ -44,15 +54,21 @@ func (s *bookcoverService) GetByTitleAuthor(bookTitle, authorName, imageSize str
 }
 
 func (s *bookcoverService) GetByISBN(isbn, imageSize string) (string, error) {
+	s.metrics.RecordRequest()
+
 	isbn = strings.ReplaceAll(isbn, "-", "")
 	cacheKey := strings.ToLower(isbn)
 
 	if cachedURL, err := s.getFromCache(cacheKey); cachedURL != "" {
+		s.metrics.RecordCacheHit()
 		return applyImageSize(cachedURL, imageSize), err
 	}
 
+	s.metrics.RecordCacheMiss()
+
 	imageURL, err := s.scraper.FetchByISBN(isbn)
 	if err != nil {
+		s.metrics.RecordScrapingError()
 		return "", err
 	}
 
@@ -110,5 +126,10 @@ func (s *bookcoverService) setCache(key, value string) {
 		return
 	}
 
-	log.Printf("Created cache for key %s", key)
+	s.metrics.RecordNewBookCached()
+	slog.Debug("cache set", "key", key)
+}
+
+func GetMetricsStats() metrics.Stats {
+	return metrics.GetCacheMetrics().GetStats()
 }
