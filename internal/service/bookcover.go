@@ -48,6 +48,7 @@ func (s *bookcoverService) GetByTitleAuthor(bookTitle, authorName, imageSize str
 		return "", err
 	}
 
+	slog.Info("book fetch", "title", bookTitle, "author", authorName, "source", "scraper")
 	s.setCache(cacheKey, imageURL)
 
 	return applyImageSize(imageURL, imageSize), nil
@@ -72,6 +73,7 @@ func (s *bookcoverService) GetByISBN(isbn, imageSize string) (string, error) {
 		return "", err
 	}
 
+	slog.Info("book fetch", "isbn", isbn, "source", "scraper")
 	s.setCache(cacheKey, imageURL)
 
 	return applyImageSize(imageURL, imageSize), nil
@@ -103,12 +105,13 @@ func (s *bookcoverService) getFromCache(key string) (string, error) {
 
 	cachedURL, err := s.cache.Get(key)
 	if err != nil {
-		log.Print(err)
+		if err != memcache.ErrCacheMiss {
+			log.Printf("Cache get error for key %s: %v", key, err)
+		}
 		return "", nil
 	}
 
 	if cachedURL != nil {
-		log.Printf("Found cache with key %s", key)
 		return string(cachedURL.Value), nil
 	}
 
