@@ -141,7 +141,7 @@ func TestGetByISBN_CacheHit(t *testing.T) {
 
 	service := NewBookcoverService(mockScraper, mockCache)
 
-	url, err := service.GetByISBN("978-0345376596", "")
+	url, err := service.GetByISBN("9780345376596", "")
 	if err != nil {
 		t.Errorf("GetByISBN() error = %v", err)
 	}
@@ -166,7 +166,7 @@ func TestGetByISBN_CacheMiss_ScraperSuccess(t *testing.T) {
 	mockCache := mocks.NewMockCache()
 	service := NewBookcoverService(mockScraper, mockCache)
 
-	url, err := service.GetByISBN("978-0345376596", "")
+	url, err := service.GetByISBN("9780345376596", "")
 	if err != nil {
 		t.Errorf("GetByISBN() error = %v", err)
 	}
@@ -175,7 +175,7 @@ func TestGetByISBN_CacheMiss_ScraperSuccess(t *testing.T) {
 		t.Errorf("GetByISBN() = %v, want %v", url, expectedURL)
 	}
 
-	// Verify cache was set (ISBN is normalized to remove dashes and lowercase)
+	// Verify cache was set (ISBN is lowercased for cache key)
 	cachedItem, _ := mockCache.Get("9780345376596")
 	if cachedItem == nil {
 		t.Error("Expected item to be cached, but cache is empty")
@@ -196,7 +196,7 @@ func TestGetByISBN_ScraperError(t *testing.T) {
 	mockCache := mocks.NewMockCache()
 	service := NewBookcoverService(mockScraper, mockCache)
 
-	_, err := service.GetByISBN("978-0000000000", "")
+	_, err := service.GetByISBN("9780000000000", "")
 	if err == nil {
 		t.Error("GetByISBN() expected error, got nil")
 	}
@@ -238,7 +238,7 @@ func TestGetByISBN_NilCache(t *testing.T) {
 
 	service := NewBookcoverService(mockScraper, nil)
 
-	url, err := service.GetByISBN("978-0345376596", "")
+	url, err := service.GetByISBN("9780345376596", "")
 	if err != nil {
 		t.Errorf("GetByISBN() with nil cache error = %v", err)
 	}
@@ -302,7 +302,7 @@ func TestGetByISBN_CacheGetError_FallsBackToScraper(t *testing.T) {
 
 	svc := NewBookcoverService(ms, &errCache{getErr: errors.New("connection refused")})
 
-	url, err := svc.GetByISBN("978-0345376596", "")
+	url, err := svc.GetByISBN("9780345376596", "")
 	if err != nil {
 		t.Errorf("GetByISBN() unexpected error: %v", err)
 	}
@@ -350,7 +350,7 @@ func TestGetByISBN_CacheSetError_StillReturnsURL(t *testing.T) {
 		setErr: errors.New("set error"),
 	})
 
-	url, err := svc.GetByISBN("978-0345376596", "")
+	url, err := svc.GetByISBN("9780345376596", "")
 	if err != nil {
 		t.Errorf("GetByISBN() unexpected error: %v", err)
 	}
@@ -448,7 +448,7 @@ func TestGetByISBN_WithImageSize(t *testing.T) {
 	mockCache := mocks.NewMockCache()
 	svc := NewBookcoverService(ms, mockCache)
 
-	url, err := svc.GetByISBN("978-0345376596", "medium")
+	url, err := svc.GetByISBN("9780345376596", "medium")
 	if err != nil {
 		t.Errorf("GetByISBN() unexpected error: %v", err)
 	}

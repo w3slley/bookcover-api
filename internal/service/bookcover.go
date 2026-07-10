@@ -57,7 +57,6 @@ func (s *bookcoverService) GetByTitleAuthor(bookTitle, authorName, imageSize str
 func (s *bookcoverService) GetByISBN(isbn, imageSize string) (string, error) {
 	s.metrics.RecordRequest()
 
-	isbn = strings.ReplaceAll(isbn, "-", "")
 	cacheKey := strings.ToLower(isbn)
 
 	if cachedURL, err := s.getFromCache(cacheKey); cachedURL != "" {
