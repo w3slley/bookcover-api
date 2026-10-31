@@ -1,47 +1,69 @@
 package scraper
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"regexp"
 	"strings"
-
-	"github.com/PuerkitoBio/goquery"
 )
 
-const querySeparator = "+"
+const (
+	querySeparator  = "+"
+	autoCompleteURL = "https://www.goodreads.com/book/auto_complete?format=json&q="
+)
 
-type Goodreads struct{}
+var (
+	errImageNotFound = errors.New("image was not found")
+	imageSizeSuffix  = regexp.MustCompile(`_[^_]*_.`)
+)
+
+type Goodreads struct {
+	autoCompleteURL string
+}
 
 func NewGoodreads() *Goodreads {
-	return &Goodreads{}
+	return &Goodreads{autoCompleteURL: autoCompleteURL}
+}
+
+type BookJsonResponse struct {
+	ImageUrl string `json:"imageUrl"`
 }
 
 func (g *Goodreads) FetchByTitleAuthor(bookTitle, authorName string) (string, error) {
 	bookTitle = strings.ReplaceAll(bookTitle, " ", querySeparator)
 	authorName = strings.ReplaceAll(authorName, " ", querySeparator)
 
-	query := "https://www.goodreads.com/search?utf8=%E2%9C%93&q=" + bookTitle + "&search_type=books"
-	body, err := g.fetchHTML(query)
+	body, err := g.fetch(g.autoCompleteURL + bookTitle)
 	if err != nil {
 		return "", err
 	}
 
-	return g.extractURLFromSearch(body, bookTitle, authorName)
+	url, err := g.extractImageURL(body)
+	if err != nil {
+		return "", fmt.Errorf("%w [book_title=%s, author_name=%s]", err, bookTitle, authorName)
+	}
+
+	return url, nil
 }
 
 func (g *Goodreads) FetchByISBN(isbn string) (string, error) {
-	query := "https://www.goodreads.com/search?utf8=✓&query=" + isbn
-	body, err := g.fetchHTML(query)
+	body, err := g.fetch(g.autoCompleteURL + isbn)
 	if err != nil {
 		return "", err
 	}
 
-	return g.extractURLFromISBN(body, isbn)
+	url, err := g.extractImageURL(body)
+	if err != nil {
+		return "", fmt.Errorf("%w for ISBN %s", err, isbn)
+	}
+
+	return url, nil
 }
 
-func (g *Goodreads) fetchHTML(url string) ([]byte, error) {
+func (g *Goodreads) fetch(url string) ([]byte, error) {
 	response, err := http.Get(url)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch URL: %w", err)
@@ -56,53 +78,15 @@ func (g *Goodreads) fetchHTML(url string) ([]byte, error) {
 	return body, nil
 }
 
-func (g *Goodreads) extractURLFromISBN(data []byte, isbn string) (string, error) {
-	doc, err := g.parseHTML(data)
-	if err != nil {
-		return "", err
+func (g *Goodreads) extractImageURL(data []byte) (string, error) {
+	var books []BookJsonResponse
+	if err := json.Unmarshal(data, &books); err != nil {
+		return "", fmt.Errorf("failed to parse response: %w", err)
 	}
 
-	imageURL, exists := doc.Find(".BookCover__image").First().Find("img").First().Attr("src")
-	if !exists {
-		return "", fmt.Errorf("image was not found for ISBN %s", isbn)
+	if len(books) == 0 {
+		return "", errImageNotFound
 	}
 
-	return imageURL, nil
-}
-
-func (g *Goodreads) extractURLFromSearch(data []byte, bookTitle, authorName string) (string, error) {
-	doc, err := g.parseHTML(data)
-	if err != nil {
-		return "", err
-	}
-
-	url := ""
-	doc.Find("tr[itemscope]").Each(func(i int, s *goquery.Selection) {
-		foundURL, urlExists := s.Find(".bookCover").First().Attr("src")
-
-		foundAuthorName := strings.Join(strings.Fields(s.Find(".authorName").First().Text()), " ")
-		foundAuthorName = strings.ReplaceAll(foundAuthorName, " ", querySeparator)
-
-		if url == "" && urlExists && strings.EqualFold(foundAuthorName, authorName) {
-			url = foundURL
-		}
-	})
-
-	if url == "" {
-		return "", fmt.Errorf("image was not found [book_title=%s, author_name=%s]", bookTitle, authorName)
-	}
-
-	// Remove small image indicator to retrieve bigger cover image
-	imageURL := regexp.MustCompile(`_[^_]*_.`).ReplaceAllString(url, "")
-	return imageURL, nil
-}
-
-func (g *Goodreads) parseHTML(data []byte) (*goquery.Document, error) {
-	html := string(data)
-	reader := strings.NewReader(html)
-	doc, err := goquery.NewDocumentFromReader(reader)
-	if err != nil {
-		return nil, fmt.Errorf("error creating document: %w", err)
-	}
-	return doc, nil
+	return imageSizeSuffix.ReplaceAllString(books[0].ImageUrl, ""), nil
 }

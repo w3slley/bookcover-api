@@ -86,8 +86,7 @@ func TestBookcoverByISBN_CacheHit(t *testing.T) {
 func TestBookcoverSearch_CacheMiss(t *testing.T) {
 	handler, _ := setupTestHandler()
 
-	// Create request
-	req := httptest.NewRequest("GET", "/bookcover?book_title=test+book&author_name=test+author+different", nil)
+	req := httptest.NewRequest("GET", "/bookcover?book_title=zzqxjvkw+qpwoeiruty&author_name=zzqxjvkw", nil)
 	w := httptest.NewRecorder()
 
 	// Call handler

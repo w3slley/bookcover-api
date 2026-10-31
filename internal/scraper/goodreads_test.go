@@ -7,6 +7,21 @@ import (
 	"testing"
 )
 
+const coverWithSizeSuffix = `[{"imageUrl": "https://example.com/cover._SX98_.jpg"}, {"imageUrl": "https://example.com/other.jpg"}]`
+
+func newTestGoodreads(t *testing.T, handler http.HandlerFunc) *Goodreads {
+	t.Helper()
+	srv := httptest.NewServer(handler)
+	t.Cleanup(srv.Close)
+	return &Goodreads{autoCompleteURL: srv.URL + "/?q="}
+}
+
+func respondWith(body string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(body))
+	}
+}
+
 func TestNewGoodreads(t *testing.T) {
 	scraper := NewGoodreads()
 	if scraper == nil {
@@ -14,194 +29,163 @@ func TestNewGoodreads(t *testing.T) {
 	}
 }
 
-func TestParseHTML(t *testing.T) {
-	g := NewGoodreads()
+func TestFetchByISBN(t *testing.T) {
+	var gotQuery string
+	g := newTestGoodreads(t, func(w http.ResponseWriter, r *http.Request) {
+		gotQuery = r.URL.Query().Get("q")
+		w.Write([]byte(coverWithSizeSuffix))
+	})
 
-	html := []byte(`
-		<html>
-			<body>
-				<div class="test">Hello World</div>
-			</body>
-		</html>
-	`)
-
-	doc, err := g.parseHTML(html)
+	url, err := g.FetchByISBN("9780345376596")
 	if err != nil {
-		t.Errorf("parseHTML() error = %v", err)
+		t.Fatalf("FetchByISBN() error = %v", err)
 	}
 
-	if doc == nil {
-		t.Error("parseHTML() returned nil document")
-	}
-
-	text := doc.Find(".test").Text()
-	if text != "Hello World" {
-		t.Errorf("parseHTML() text = %v, want %v", text, "Hello World")
-	}
-}
-
-func TestParseHTML_InvalidHTML(t *testing.T) {
-	g := NewGoodreads()
-
-	// Empty HTML should still parse successfully (goquery is forgiving)
-	doc, err := g.parseHTML([]byte(""))
-	if err != nil {
-		t.Errorf("parseHTML() with empty HTML error = %v", err)
-	}
-
-	if doc == nil {
-		t.Error("parseHTML() returned nil document for empty HTML")
-	}
-}
-
-func TestExtractURLFromISBN(t *testing.T) {
-	g := NewGoodreads()
-
-	// Test with HTML that has the expected structure
-	html := []byte(`
-		<html>
-			<body>
-				<div class="BookCover__image">
-					<img src="https://example.com/cover.jpg" />
-				</div>
-			</body>
-		</html>
-	`)
-
-	url, err := g.extractURLFromISBN(html, "1234567890123")
-	if err != nil {
-		t.Errorf("extractURLFromISBN() error = %v", err)
+	if gotQuery != "9780345376596" {
+		t.Errorf("FetchByISBN() queried q = %q, want %q", gotQuery, "9780345376596")
 	}
 
 	expectedURL := "https://example.com/cover.jpg"
 	if url != expectedURL {
-		t.Errorf("extractURLFromISBN() = %v, want %v", url, expectedURL)
+		t.Errorf("FetchByISBN() = %v, want %v", url, expectedURL)
 	}
 }
 
-func TestExtractURLFromISBN_NotFound(t *testing.T) {
-	g := NewGoodreads()
+func TestFetchByTitleAuthor(t *testing.T) {
+	var gotQuery string
+	g := newTestGoodreads(t, func(w http.ResponseWriter, r *http.Request) {
+		gotQuery = r.URL.Query().Get("q")
+		w.Write([]byte(coverWithSizeSuffix))
+	})
 
-	html := []byte(`<html><body><div>No book cover here</div></body></html>`)
-
-	_, err := g.extractURLFromISBN(html, "1234567890123")
-	if err == nil {
-		t.Error("extractURLFromISBN() expected error for missing image, got nil")
-	}
-
-	expectedError := "image was not found for ISBN 1234567890123"
-	if err.Error() != expectedError {
-		t.Errorf("extractURLFromISBN() error = %v, want %v", err.Error(), expectedError)
-	}
-}
-
-func TestExtractURLFromSearch(t *testing.T) {
-	g := NewGoodreads()
-
-	html := []byte(`
-		<html>
-			<body>
-				<table>
-					<tr itemscope>
-						<td>
-							<img class="bookCover" src="https://example.com/cover_SX98_.jpg" />
-						</td>
-						<td>
-							<a class="authorName">Carl Sagan</a>
-						</td>
-					</tr>
-				</table>
-			</body>
-		</html>
-	`)
-
-	url, err := g.extractURLFromSearch(html, "Pale+Blue+Dot", "Carl+Sagan")
+	url, err := g.FetchByTitleAuthor("Pale Blue Dot", "Carl Sagan")
 	if err != nil {
-		t.Errorf("extractURLFromSearch() error = %v", err)
+		t.Fatalf("FetchByTitleAuthor() error = %v", err)
 	}
 
-	// The regex _[^_]*_. removes _SX98_. (including the dot after the underscore)
-	expectedURL := "https://example.com/coverjpg"
+	if gotQuery != "Pale Blue Dot" {
+		t.Errorf("FetchByTitleAuthor() queried q = %q, want %q", gotQuery, "Pale Blue Dot")
+	}
+
+	expectedURL := "https://example.com/cover.jpg"
 	if url != expectedURL {
-		t.Errorf("extractURLFromSearch() = %v, want %v", url, expectedURL)
+		t.Errorf("FetchByTitleAuthor() = %v, want %v", url, expectedURL)
 	}
 }
 
-func TestExtractURLFromSearch_NotFound(t *testing.T) {
-	g := NewGoodreads()
+func TestFetch_NotFound(t *testing.T) {
+	tests := []struct {
+		name    string
+		fetch   func(g *Goodreads) (string, error)
+		wantErr string
+	}{
+		{
+			name:    "by ISBN",
+			fetch:   func(g *Goodreads) (string, error) { return g.FetchByISBN("1234567890123") },
+			wantErr: "image was not found for ISBN 1234567890123",
+		},
+		{
+			name: "by title and author",
+			fetch: func(g *Goodreads) (string, error) {
+				return g.FetchByTitleAuthor("Unknown Book", "Unknown Author")
+			},
+			wantErr: "image was not found [book_title=Unknown+Book, author_name=Unknown+Author]",
+		},
+	}
 
-	html := []byte(`<html><body><div>No results</div></body></html>`)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			g := newTestGoodreads(t, respondWith(`[]`))
 
-	_, err := g.extractURLFromSearch(html, "NonExistent+Book", "Unknown+Author")
-	if err == nil {
-		t.Error("extractURLFromSearch() expected error for missing book, got nil")
+			_, err := tt.fetch(g)
+			if err == nil {
+				t.Fatal("expected error for empty result, got nil")
+			}
+			if err.Error() != tt.wantErr {
+				t.Errorf("error = %q, want %q", err.Error(), tt.wantErr)
+			}
+		})
 	}
 }
 
-func TestExtractURLFromSearch_AuthorMismatch(t *testing.T) {
-	g := NewGoodreads()
+func TestFetch_InvalidJSON(t *testing.T) {
+	tests := []struct {
+		name  string
+		fetch func(g *Goodreads) (string, error)
+	}{
+		{
+			name:  "by ISBN",
+			fetch: func(g *Goodreads) (string, error) { return g.FetchByISBN("1234567890123") },
+		},
+		{
+			name:  "by title and author",
+			fetch: func(g *Goodreads) (string, error) { return g.FetchByTitleAuthor("Some Book", "Some Author") },
+		},
+	}
 
-	html := []byte(`
-		<html>
-			<body>
-				<tr itemscope>
-					<img class="bookCover" src="https://example.com/cover.jpg" />
-					<span class="authorName">Stephen King</span>
-				</tr>
-			</body>
-		</html>
-	`)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			g := newTestGoodreads(t, respondWith(`<html>not json</html>`))
 
-	// Search for different author
-	_, err := g.extractURLFromSearch(html, "The+Stand", "Carl+Sagan")
-	if err == nil {
-		t.Error("extractURLFromSearch() expected error for author mismatch, got nil")
+			_, err := tt.fetch(g)
+			if err == nil {
+				t.Fatal("expected error for invalid JSON, got nil")
+			}
+			if !strings.Contains(err.Error(), "failed to parse response") {
+				t.Errorf("error = %q, want it to contain 'failed to parse response'", err.Error())
+			}
+			if strings.Contains(err.Error(), "image was not found") {
+				t.Errorf("error = %q, invalid JSON must not be reported as not found", err.Error())
+			}
+		})
 	}
 }
 
-func TestFetchHTML_Success(t *testing.T) {
-	expected := "<html><body>hello</body></html>"
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(expected))
-	}))
-	defer srv.Close()
+func TestFetch_NetworkError(t *testing.T) {
+	tests := []struct {
+		name  string
+		fetch func(g *Goodreads) (string, error)
+	}{
+		{
+			name:  "by ISBN",
+			fetch: func(g *Goodreads) (string, error) { return g.FetchByISBN("1234567890123") },
+		},
+		{
+			name:  "by title and author",
+			fetch: func(g *Goodreads) (string, error) { return g.FetchByTitleAuthor("Some Book", "Some Author") },
+		},
+	}
 
-	g := NewGoodreads()
-	body, err := g.fetchHTML(srv.URL)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Nothing listens on this port, so the connection is refused
+			g := &Goodreads{autoCompleteURL: "http://127.0.0.1:1/?q="}
+
+			_, err := tt.fetch(g)
+			if err == nil {
+				t.Fatal("expected error for refused connection, got nil")
+			}
+			if !strings.Contains(err.Error(), "failed to fetch URL") {
+				t.Errorf("error = %q, want it to contain 'failed to fetch URL'", err.Error())
+			}
+		})
+	}
+}
+
+func TestFetch_LargeBody(t *testing.T) {
+	// Padding after the JSON array is ignored by the decoder only if the body is fully read,
+	// so a large valid payload checks that the whole response is consumed.
+	entries := strings.Repeat(`{"imageUrl": "https://example.com/filler.jpg"},`, 5000)
+	body := `[{"imageUrl": "https://example.com/cover._SX98_.jpg"},` + entries + `{"imageUrl": "https://example.com/last.jpg"}]`
+	g := newTestGoodreads(t, respondWith(body))
+
+	url, err := g.FetchByISBN("1234567890123")
 	if err != nil {
-		t.Fatalf("fetchHTML() unexpected error: %v", err)
+		t.Fatalf("FetchByISBN() error = %v", err)
 	}
-	if string(body) != expected {
-		t.Errorf("fetchHTML() body = %q, want %q", string(body), expected)
-	}
-}
 
-func TestFetchHTML_NetworkError(t *testing.T) {
-	g := NewGoodreads()
-	// Use an address that will refuse connections
-	_, err := g.fetchHTML("http://127.0.0.1:1")
-	if err == nil {
-		t.Fatal("fetchHTML() expected error for refused connection, got nil")
-	}
-	if !strings.Contains(err.Error(), "failed to fetch URL") {
-		t.Errorf("fetchHTML() error = %q, want it to contain 'failed to fetch URL'", err.Error())
-	}
-}
-
-func TestFetchHTML_LargeBody(t *testing.T) {
-	payload := strings.Repeat("x", 1024*100) // 100KB
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(payload))
-	}))
-	defer srv.Close()
-
-	g := NewGoodreads()
-	body, err := g.fetchHTML(srv.URL)
-	if err != nil {
-		t.Fatalf("fetchHTML() unexpected error: %v", err)
-	}
-	if len(body) != len(payload) {
-		t.Errorf("fetchHTML() body length = %d, want %d", len(body), len(payload))
+	expectedURL := "https://example.com/cover.jpg"
+	if url != expectedURL {
+		t.Errorf("FetchByISBN() = %v, want %v", url, expectedURL)
 	}
 }
